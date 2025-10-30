@@ -17,10 +17,10 @@ import {
   auditActionLabels,
   auditActionColors,
 } from '../data/auditData'
-import { AuditLog, AuditAction } from '../types/audit'
+import { AuditAction } from '../types/audit'
 
 export default function AuditLogs() {
-  const [logs, setLogs] = useState(mockAuditLogs)
+  const [logs] = useState(mockAuditLogs)
   const [filterAction, setFilterAction] = useState<AuditAction | 'all'>('all')
   const [filterUser, setFilterUser] = useState<string>('all')
   const [filterSuccess, setFilterSuccess] = useState<'all' | 'success' | 'failed'>('all')

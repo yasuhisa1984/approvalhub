@@ -2,21 +2,8 @@ import { useState, useEffect } from 'react'
 import { Clock, CheckCircle, XCircle, TrendingUp, Loader } from 'lucide-react'
 import { approvalApi } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
+import { Approval } from '../types'
 import ApprovalCard from './ApprovalCard'
-
-interface Approval {
-  id: number
-  title: string
-  description: string
-  status: string
-  current_step: number
-  total_steps?: number
-  route_name?: string
-  applicant: { id: number; name: string }
-  current_approver?: { id: number; name: string }
-  created_at: string
-  updated_at?: string
-}
 
 interface Stats {
   pending: number
@@ -48,16 +35,33 @@ export default function Dashboard() {
         const response = await approvalApi.getApprovals({ status: 'pending' })
 
         // レスポンスの形式に応じて処理
-        const approvalsData = response.data || response || []
-        setApprovals(Array.isArray(approvalsData) ? approvalsData : [])
+        const rawData = response.data || response || []
+        const approvalsData = Array.isArray(rawData) ? rawData : []
+
+        // APIレスポンスをApproval型にマッピング
+        const mappedApprovals: Approval[] = approvalsData.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          status: (item.status as 'pending' | 'approved' | 'rejected' | 'withdrawn') || 'pending',
+          current_step: item.current_step || 1,
+          total_steps: item.total_steps || 1,
+          applicant: item.applicant || { id: 0, name: '不明', email: '', role: 'member' as const },
+          current_approver: item.current_approver,
+          route_name: item.route_name || '未設定',
+          created_at: item.created_at || new Date().toISOString(),
+          updated_at: item.updated_at || item.created_at || new Date().toISOString(),
+        }))
+
+        setApprovals(mappedApprovals)
 
         // 統計情報を計算 (TODO: バックエンドからの統計APIを実装予定)
-        const pendingCount = approvalsData.filter((a: Approval) => a.status === 'pending').length
+        const pendingCount = mappedApprovals.filter((a) => a.status === 'pending').length
         setStats({
           pending: pendingCount,
           approved_today: 0, // TODO: API実装後に更新
           rejected_today: 0, // TODO: API実装後に更新
-          total_this_month: approvalsData.length,
+          total_this_month: mappedApprovals.length,
         })
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err)

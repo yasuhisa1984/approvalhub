@@ -17,7 +17,7 @@ import {
   notificationTypeIcons,
   notificationTypeColors,
 } from '../data/notificationData'
-import { Notification, NotificationType, NotificationSettings } from '../types/notification'
+import { NotificationType, NotificationSettings } from '../types/notification'
 
 export default function NotificationCenter() {
   const [notifications, setNotifications] = useState(mockNotifications)

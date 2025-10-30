@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Plus, ArrowLeft, Trash2, GripVertical, Save } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Plus, Trash2, GripVertical, Save } from 'lucide-react'
 
 interface User {
   id: number

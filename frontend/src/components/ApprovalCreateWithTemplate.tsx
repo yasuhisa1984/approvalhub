@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ArrowLeft, CheckCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { mockFormTemplates } from '../data/formTemplates'
-import { FormTemplate, FormField, FormData } from '../types/form'
+import { FormTemplate, FormData } from '../types/form'
 import DynamicForm from './DynamicForm'
 
 export default function ApprovalCreateWithTemplate() {

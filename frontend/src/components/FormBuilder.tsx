@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeft, Plus, Trash2, GripVertical, Save } from 'lucide-react'
+import { ArrowLeft, Trash2, GripVertical, Save } from 'lucide-react'
 import { FormTemplate, FormField, FieldType } from '../types/form'
 
 interface FormBuilderProps {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Edit2, Copy, Trash2, Eye } from 'lucide-react'
+import { Plus, Edit2, Eye } from 'lucide-react'
 import { mockFormTemplates } from '../data/formTemplates'
 import { FormTemplate } from '../types/form'
 import FormBuilder from './FormBuilder'

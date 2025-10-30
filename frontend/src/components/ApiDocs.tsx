@@ -215,7 +215,7 @@ export default function ApiDocs() {
                           <button
                             onClick={() =>
                               copyToClipboard(
-                                JSON.stringify(endpoint.requestBody.properties, null, 2),
+                                JSON.stringify(endpoint.requestBody?.properties || {}, null, 2),
                                 `req-${key}`
                               )
                             }

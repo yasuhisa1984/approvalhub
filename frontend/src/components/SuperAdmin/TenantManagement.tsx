@@ -3,7 +3,6 @@ import {
   Building2,
   Search,
   Plus,
-  MoreVertical,
   Users,
   HardDrive,
   DollarSign,
@@ -14,7 +13,6 @@ import {
   Pause,
   ExternalLink,
   CheckCircle,
-  XCircle,
   Clock,
   TrendingUp,
 } from 'lucide-react'
