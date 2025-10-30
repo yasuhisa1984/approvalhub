@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {
-  Activity,
   Database,
   Server,
   HardDrive,
@@ -14,7 +13,6 @@ import {
   AlertCircle,
   RefreshCw,
   Download,
-  Filter,
 } from 'lucide-react'
 import {
   mockSystemHealth,
@@ -23,7 +21,6 @@ import {
   mockUserActivities,
   mockStuckApprovals,
 } from '../data/adminData'
-import { ErrorLog } from '../types/admin'
 
 export default function AdminDashboard() {
   const [errorLogs, setErrorLogs] = useState(mockErrorLogs)
@@ -68,12 +65,12 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">管理者ダッシュボード</h2>
-          <p className="text-sm text-gray-600 mt-1">システムの健全性と運用状況を監視します</p>
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-900">管理者ダッシュボード</h2>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">システムの健全性と運用状況を監視します</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium">
+        <button className="flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium whitespace-nowrap">
           <RefreshCw className="w-4 h-4" />
           更新
         </button>
@@ -247,36 +244,35 @@ export default function AdminDashboard() {
 
       {/* Error Logs */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900">エラーログ</h3>
-          <div className="flex gap-2">
-            <select
-              value={filterLevel}
-              onChange={(e) => setFilterLevel(e.target.value as any)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="all">すべてのレベル</option>
-              <option value="error">エラー</option>
-              <option value="warning">警告</option>
-              <option value="info">情報</option>
-            </select>
-            <select
-              value={filterResolved}
-              onChange={(e) => setFilterResolved(e.target.value as any)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="all">すべて</option>
-              <option value="unresolved">未解決</option>
-              <option value="resolved">解決済み</option>
-            </select>
-            <button className="flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
-              <Download className="w-4 h-4" />
-              エクスポート
-            </button>
-          </div>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">エラーログ</h3>
+        <div className="flex flex-col sm:flex-row gap-2 mb-3">
+          <select
+            value={filterLevel}
+            onChange={(e) => setFilterLevel(e.target.value as any)}
+            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          >
+            <option value="all">すべてのレベル</option>
+            <option value="error">エラー</option>
+            <option value="warning">警告</option>
+            <option value="info">情報</option>
+          </select>
+          <select
+            value={filterResolved}
+            onChange={(e) => setFilterResolved(e.target.value as any)}
+            className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          >
+            <option value="all">すべて</option>
+            <option value="unresolved">未解決</option>
+            <option value="resolved">解決済み</option>
+          </select>
+          <button className="flex items-center justify-center gap-2 px-3 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
+            <Download className="w-4 h-4" />
+            <span>エクスポート</span>
+          </button>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        {/* Desktop Table */}
+        <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
@@ -358,12 +354,64 @@ export default function AdminDashboard() {
             </table>
           </div>
         </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-3">
+          {filteredLogs.map((log) => (
+            <div key={log.id} className="bg-white border border-gray-200 rounded-lg p-4">
+              <div className="flex items-start justify-between mb-3">
+                <span
+                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                    log.level === 'error'
+                      ? 'bg-red-100 text-red-800'
+                      : log.level === 'warning'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-blue-100 text-blue-800'
+                  }`}
+                >
+                  {log.level.toUpperCase()}
+                </span>
+                {log.resolved ? (
+                  <span className="inline-flex items-center gap-1 text-xs text-green-700">
+                    <CheckCircle className="w-4 h-4" />
+                    解決済み
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-xs text-red-700">
+                    <AlertCircle className="w-4 h-4" />
+                    未解決
+                  </span>
+                )}
+              </div>
+              <div className="space-y-2 mb-3">
+                <p className="text-sm text-gray-900 font-medium">{log.message}</p>
+                {log.endpoint && (
+                  <p className="text-xs text-gray-500">{log.endpoint}</p>
+                )}
+              </div>
+              <div className="flex items-center justify-between text-xs text-gray-600 mb-3">
+                <span>{log.timestamp}</span>
+                <span>{log.userName || '不明'}</span>
+              </div>
+              {!log.resolved && (
+                <button
+                  onClick={() => handleResolveLog(log.id)}
+                  className="w-full px-3 py-2 bg-primary-50 text-primary-600 hover:bg-primary-100 rounded-lg text-sm font-medium transition-colors"
+                >
+                  解決済みにする
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* User Activities */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">ユーザー別承認統計</h3>
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">ユーザー別承認統計</h3>
+
+        {/* Desktop Table */}
+        <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
@@ -403,6 +451,32 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-3">
+          {mockUserActivities.map((activity) => (
+            <div key={activity.userId} className="bg-white border border-gray-200 rounded-lg p-4">
+              <div className="mb-3">
+                <p className="font-semibold text-gray-900">{activity.userName}</p>
+                <p className="text-sm text-gray-500">{activity.email}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-gray-500">承認件数</p>
+                  <p className="font-semibold text-gray-900">{activity.approvalCount}件</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">平均応答時間</p>
+                  <p className="font-semibold text-gray-900">{activity.avgResponseTime}時間</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-gray-500">最終アクティブ</p>
+                  <p className="font-semibold text-gray-900">{activity.lastActive}</p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

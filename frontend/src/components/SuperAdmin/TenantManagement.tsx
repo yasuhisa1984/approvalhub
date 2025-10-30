@@ -75,17 +75,18 @@ export default function TenantManagement() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">テナント管理</h2>
-          <p className="text-sm text-gray-600 mt-1">SaaS全体のテナント（契約者）を管理します</p>
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-900">テナント管理</h2>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">SaaS全体のテナント（契約者）を管理します</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium"
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium whitespace-nowrap"
         >
           <Plus className="w-4 h-4" />
-          新規テナント作成
+          <span className="hidden sm:inline">新規テナント作成</span>
+          <span className="sm:hidden">新規作成</span>
         </button>
       </div>
 
@@ -168,8 +169,8 @@ export default function TenantManagement() {
         </div>
       </div>
 
-      {/* Tenants Table */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      {/* Tenants Table - Desktop */}
+      <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -311,6 +312,119 @@ export default function TenantManagement() {
         )}
       </div>
 
+      {/* Tenants Cards - Mobile */}
+      <div className="md:hidden space-y-3">
+        {filteredTenants.length === 0 ? (
+          <div className="bg-white rounded-lg border border-gray-200 text-center py-12 text-gray-500">
+            <Building2 className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+            <p>テナントが見つかりませんでした</p>
+          </div>
+        ) : (
+          filteredTenants.map((tenant) => (
+            <div key={tenant.id} className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-900">{tenant.name}</p>
+                  <p className="text-sm text-gray-500 truncate">{tenant.subdomain}.approvalhub.com</p>
+                  <p className="text-xs text-gray-500 mt-1">{tenant.contactEmail}</p>
+                </div>
+                <div className="flex flex-col gap-1 ml-2">
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      tenantStatusColors[tenant.status]
+                    }`}
+                  >
+                    {tenantStatusLabels[tenant.status]}
+                  </span>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      planColors[tenant.plan]
+                    }`}
+                  >
+                    {planLabels[tenant.plan]}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+                <div>
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <Users className="w-3 h-3" />
+                    ユーザー数
+                  </p>
+                  <p className="font-medium text-gray-900">
+                    {tenant.currentUsers} / {tenant.maxUsers}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <HardDrive className="w-3 h-3" />
+                    ストレージ
+                  </p>
+                  <p className="font-medium text-gray-900">
+                    {tenant.usedStorage.toFixed(1)} / {tenant.maxStorage}GB
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <DollarSign className="w-3 h-3" />
+                    月額料金
+                  </p>
+                  <p className="font-semibold text-gray-900">
+                    ¥{tenant.billing.monthlyFee.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    作成日
+                  </p>
+                  <p className="font-medium text-gray-900">{tenant.createdAt}</p>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-3 border-t border-gray-200">
+                <button
+                  onClick={() => handleImpersonate(tenant)}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  入る
+                </button>
+                <button
+                  onClick={() => setSelectedTenant(tenant)}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <Edit className="w-4 h-4" />
+                  編集
+                </button>
+                {tenant.status === 'active' ? (
+                  <button
+                    onClick={() => handleSuspend(tenant.id)}
+                    className="px-3 py-2 text-sm font-medium text-yellow-600 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors"
+                  >
+                    <Pause className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleActivate(tenant.id)}
+                    className="px-3 py-2 text-sm font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                  >
+                    <Play className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDelete(tenant.id)}
+                  className="px-3 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
       {/* Create Modal */}
       {showCreateModal && (
         <CreateTenantModal
@@ -382,9 +496,9 @@ function CreateTenantModal({ onClose, onCreate }: CreateTenantModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
-        <h3 className="text-xl font-bold text-gray-900 mb-4">新規テナント作成</h3>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">新規テナント作成</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 テナント名 <span className="text-red-500">*</span>
@@ -447,7 +561,7 @@ function CreateTenantModal({ onClose, onCreate }: CreateTenantModalProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">プラン</label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {(['free', 'pro', 'enterprise'] as SubscriptionPlan[]).map((plan) => (
                 <button
                   key={plan}
@@ -513,9 +627,9 @@ function EditTenantModal({ tenant, onClose, onSave }: EditTenantModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-xl font-bold text-gray-900 mb-4">テナント編集</h3>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">テナント編集</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">テナント名</label>
               <input

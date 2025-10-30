@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
+import { authApi } from '../lib/api'
+import * as authLib from '../lib/auth'
 
 export interface User {
   id: number
@@ -6,8 +8,10 @@ export interface User {
   email: string
   role: 'superadmin' | 'admin' | 'manager' | 'member'
   tenantId?: number
+  tenant_id?: number
   tenantName?: string
   avatar?: string
+  avatar_url?: string
 }
 
 interface AuthContextType {
@@ -25,71 +29,84 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // ページロード時にlocalStorageから復元
+  // ページロード時に認証状態をチェック
   useEffect(() => {
-    const storedUser = localStorage.getItem('auth_user')
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser))
-      } catch (e) {
-        localStorage.removeItem('auth_user')
+    const checkAuth = async () => {
+      if (authLib.isAuthenticated()) {
+        const storedUser = authLib.getUser()
+        if (storedUser) {
+          setUser(storedUser as User)
+          console.log('✅ Authenticated user:', storedUser.name)
+        }
       }
+      setIsLoading(false)
     }
-    setIsLoading(false)
+    checkAuth()
   }, [])
 
   const login = async (email: string, password: string) => {
-    // TODO: 実際のAPI呼び出しに置き換える
-    // const response = await fetch('/api/auth/login', { ... })
+    try {
+      setIsLoading(true)
 
-    // モック実装
-    await new Promise(resolve => setTimeout(resolve, 500))
+      // 実APIを呼び出し
+      const response = await authApi.login(email, password)
 
-    let mockUser: User
-
-    // スーパー管理者
-    if (email === 'superadmin@approvalhub.com') {
-      mockUser = {
-        id: 999,
-        name: 'スーパー管理者',
-        email: 'superadmin@approvalhub.com',
-        role: 'superadmin',
+      // レスポンス確認
+      if (!response.token || !response.user) {
+        throw new Error('Invalid response from server')
       }
-    }
-    // テナント管理者
-    else if (email === 'admin@sample.co.jp') {
-      mockUser = {
-        id: 1,
-        name: '山田太郎',
-        email: 'admin@sample.co.jp',
-        role: 'admin',
-        tenantId: 1,
-        tenantName: '株式会社サンプル',
-      }
-    }
-    // 一般ユーザー
-    else {
-      mockUser = {
-        id: 3,
-        name: '鈴木一郎',
-        email: 'suzuki@example.com',
-        role: 'member',
-        tenantId: 1,
-        tenantName: '株式会社サンプル',
-      }
-    }
 
-    setUser(mockUser)
-    localStorage.setItem('auth_user', JSON.stringify(mockUser))
-    localStorage.setItem('auth_token', 'mock_jwt_token_' + Date.now())
+      // LocalStorageに保存 (新しいauth.tsライブラリを使用)
+      authLib.login(response.token, response.user)
+
+      // User型に変換してStateに保存
+      const user: User = {
+        id: response.user.id,
+        name: response.user.name,
+        email: response.user.email,
+        role: response.user.role,
+        tenantId: response.user.tenant_id,
+        tenant_id: response.user.tenant_id,
+        avatar: response.user.avatar_url,
+        avatar_url: response.user.avatar_url,
+      }
+
+      setUser(user)
+      console.log('✅ Login successful:', user.name)
+    } catch (error) {
+      console.error('❌ Login failed:', error)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const logout = () => {
-    setUser(null)
-    localStorage.removeItem('auth_user')
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('impersonated_tenant')
-    window.location.href = '/login'
+  const logout = async () => {
+    try {
+      setIsLoading(true)
+
+      // API呼び出し (ベストエフォート)
+      try {
+        await authApi.logout()
+      } catch (error) {
+        console.warn('Logout API failed (continuing anyway):', error)
+      }
+
+      // LocalStorageクリア
+      authLib.logout()
+
+      // State更新
+      setUser(null)
+
+      console.log('✅ Logout successful')
+
+      // ログイン画面へリダイレクト
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('❌ Logout failed:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

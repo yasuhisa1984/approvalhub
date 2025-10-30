@@ -12,19 +12,19 @@ export default function ApprovalCard({ approval }: ApprovalCardProps) {
       to={`/approvals/${approval.id}`}
       className="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+      <div className="mb-4">
+        <div className="flex items-start justify-between mb-2">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex-1 pr-2">
             {approval.title}
           </h3>
-          <p className="text-sm text-gray-600 line-clamp-2">
-            {approval.description}
-          </p>
+          <StatusBadge status={approval.status} />
         </div>
-        <StatusBadge status={approval.status} />
+        <p className="text-sm text-gray-600 line-clamp-2">
+          {approval.description}
+        </p>
       </div>
 
-      <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-gray-600 mb-4">
         <div className="flex items-center gap-2">
           <User className="w-4 h-4" />
           <span>{approval.applicant.name}</span>
@@ -35,7 +35,7 @@ export default function ApprovalCard({ approval }: ApprovalCardProps) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-gray-200">
         <div className="flex items-center gap-2 text-sm">
           <span className="text-gray-600">承認ルート:</span>
           <span className="font-medium text-gray-900">{approval.route_name}</span>

@@ -60,17 +60,17 @@ export default function TeamManagement() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">チーム管理</h2>
-        <p className="text-sm text-gray-600 mt-1">メンバーの招待や権限管理を行います</p>
+        <h2 className="text-lg sm:text-2xl font-bold text-gray-900">チーム管理</h2>
+        <p className="text-xs sm:text-sm text-gray-600 mt-1">メンバーの招待や権限管理を行います</p>
       </div>
 
       {/* Team Info Card */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-2xl font-bold mb-2">{mockTeam.name}</h3>
-            <p className="text-primary-100">{mockTeam.description}</p>
-            <div className="flex items-center gap-4 mt-4 text-sm">
+      <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg p-4 sm:p-6 text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex-1">
+            <h3 className="text-xl sm:text-2xl font-bold mb-2">{mockTeam.name}</h3>
+            <p className="text-sm sm:text-base text-primary-100">{mockTeam.description}</p>
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-3 sm:mt-4 text-xs sm:text-sm">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
                 <span>{mockTeam.memberCount}名のメンバー</span>
@@ -83,10 +83,11 @@ export default function TeamManagement() {
           </div>
           <button
             onClick={() => setShowInviteModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-white text-primary-600 rounded-lg font-semibold hover:bg-primary-50 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-primary-600 rounded-lg font-semibold hover:bg-primary-50 transition-colors whitespace-nowrap"
           >
             <UserPlus className="w-5 h-5" />
-            メンバーを招待
+            <span className="hidden sm:inline">メンバーを招待</span>
+            <span className="sm:hidden">招待</span>
           </button>
         </div>
       </div>
@@ -134,8 +135,8 @@ export default function TeamManagement() {
         </div>
       </div>
 
-      {/* Members Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {/* Members Table - Desktop */}
+      <div className="hidden md:block bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -221,6 +222,71 @@ export default function TeamManagement() {
             <Users className="w-12 h-12 mx-auto mb-3 text-gray-400" />
             <p>メンバーが見つかりませんでした</p>
           </div>
+        )}
+      </div>
+
+      {/* Members Cards - Mobile */}
+      <div className="md:hidden space-y-3">
+        {filteredMembers.length === 0 ? (
+          <div className="bg-white rounded-lg border border-gray-200 text-center py-12 text-gray-500">
+            <Users className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+            <p>メンバーが見つかりませんでした</p>
+          </div>
+        ) : (
+          filteredMembers.map((member) => (
+            <div key={member.id} className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                  {member.name.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-900">{member.name}</p>
+                  <p className="text-sm text-gray-500 truncate">{member.email}</p>
+                  <div className="mt-2">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        roleBadgeColors[member.role]
+                      }`}
+                    >
+                      <Shield className="w-3 h-3" />
+                      {roleLabels[member.role]}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+                <div>
+                  <p className="text-xs text-gray-500">部署</p>
+                  <p className="font-medium text-gray-900">{member.department}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">役職</p>
+                  <p className="font-medium text-gray-900">{member.position}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-gray-500">参加日</p>
+                  <p className="font-medium text-gray-900">{member.joinedAt}</p>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-3 border-t border-gray-200">
+                <button
+                  onClick={() => setSelectedMember(member)}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
+                >
+                  <Edit className="w-4 h-4" />
+                  編集
+                </button>
+                <button
+                  onClick={() => handleRemoveMember(member.id)}
+                  disabled={member.role === 'admin'}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  削除
+                </button>
+              </div>
+            </div>
+          ))
         )}
       </div>
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Code, Lock, ChevronDown, ChevronRight, Copy, Check } from 'lucide-react'
-import { apiEndpoints, apiTags, APIEndpoint } from '../data/apiSpec'
+import { apiEndpoints, apiTags } from '../data/apiSpec'
 
 export default function ApiDocs() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
@@ -133,7 +133,7 @@ export default function ApiDocs() {
                     </span>
                     <code className="text-sm font-mono text-gray-900">{endpoint.path}</code>
                     {endpoint.auth && (
-                      <Lock className="w-4 h-4 text-gray-400" title="認証が必要" />
+                      <Lock className="w-4 h-4 text-gray-400" />
                     )}
                   </div>
                   <div className="flex items-center gap-3">

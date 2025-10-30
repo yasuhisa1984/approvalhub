@@ -1,11 +1,104 @@
-import { Clock, CheckCircle, XCircle, TrendingUp } from 'lucide-react'
-import { mockApprovals, mockStats } from '../data/mockData'
+import { useState, useEffect } from 'react'
+import { Clock, CheckCircle, XCircle, TrendingUp, Loader } from 'lucide-react'
+import { approvalApi } from '../lib/api'
+import { useAuth } from '../contexts/AuthContext'
 import ApprovalCard from './ApprovalCard'
 
+interface Approval {
+  id: number
+  title: string
+  description: string
+  status: string
+  current_step: number
+  total_steps?: number
+  route_name?: string
+  applicant: { id: number; name: string }
+  current_approver?: { id: number; name: string }
+  created_at: string
+  updated_at?: string
+}
+
+interface Stats {
+  pending: number
+  approved_today: number
+  rejected_today: number
+  total_this_month: number
+}
+
 export default function Dashboard() {
-  const myApprovals = mockApprovals.filter(
-    (approval) => approval.current_approver?.id === 2
+  const { user } = useAuth()
+  const [approvals, setApprovals] = useState<Approval[]>([])
+  const [stats, setStats] = useState<Stats>({
+    pending: 0,
+    approved_today: 0,
+    rejected_today: 0,
+    total_this_month: 0,
+  })
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // データ取得
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        // 承認一覧を取得
+        const response = await approvalApi.getApprovals({ status: 'pending' })
+
+        // レスポンスの形式に応じて処理
+        const approvalsData = response.data || response || []
+        setApprovals(Array.isArray(approvalsData) ? approvalsData : [])
+
+        // 統計情報を計算 (TODO: バックエンドからの統計APIを実装予定)
+        const pendingCount = approvalsData.filter((a: Approval) => a.status === 'pending').length
+        setStats({
+          pending: pendingCount,
+          approved_today: 0, // TODO: API実装後に更新
+          rejected_today: 0, // TODO: API実装後に更新
+          total_this_month: approvalsData.length,
+        })
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err)
+        setError('データの取得に失敗しました')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // 自分が承認者の申請のみをフィルタリング
+  const myApprovals = approvals.filter(
+    (approval) => approval.current_approver?.id === user?.id
   )
+
+  // ローディング中
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader className="w-8 h-8 animate-spin text-primary-600" />
+        <span className="ml-3 text-gray-600">読み込み中...</span>
+      </div>
+    )
+  }
+
+  // エラー時
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p className="text-red-800">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-2 text-sm text-red-600 hover:text-red-700 underline"
+        >
+          再読み込み
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">
@@ -16,25 +109,25 @@ export default function Dashboard() {
           <StatCard
             icon={<Clock className="w-6 h-6" />}
             label="承認待ち"
-            value={mockStats.pending}
+            value={stats.pending}
             color="yellow"
           />
           <StatCard
             icon={<CheckCircle className="w-6 h-6" />}
             label="今日の承認"
-            value={mockStats.approved_today}
+            value={stats.approved_today}
             color="green"
           />
           <StatCard
             icon={<XCircle className="w-6 h-6" />}
             label="今日の差し戻し"
-            value={mockStats.rejected_today}
+            value={stats.rejected_today}
             color="red"
           />
           <StatCard
             icon={<TrendingUp className="w-6 h-6" />}
             label="今月の合計"
-            value={mockStats.total_this_month}
+            value={stats.total_this_month}
             color="blue"
           />
         </div>
@@ -67,19 +160,19 @@ export default function Dashboard() {
 
       {/* Recent Activity */}
       <div>
-        <h3 className="text-xl font-bold text-gray-900 mb-6">最近の活動</h3>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-6">最近の活動</h3>
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="divide-y divide-gray-200">
-            {mockApprovals.slice(0, 5).map((approval) => (
+            {approvals.slice(0, 5).map((approval) => (
               <div key={approval.id} className="p-4 hover:bg-gray-50">
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">
                       {approval.applicant.name}が申請を作成
                     </p>
                     <p className="text-sm text-gray-600 mt-1">{approval.title}</p>
                   </div>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 sm:ml-4 sm:whitespace-nowrap">
                     {formatDate(approval.created_at)}
                   </span>
                 </div>

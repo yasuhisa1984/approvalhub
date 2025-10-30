@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { ArrowLeft, CheckCircle, Upload, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ArrowLeft, CheckCircle, Upload, X, Loader } from 'lucide-react'
+import { approvalApi } from '../lib/api'
 
 interface ApprovalRoute {
   id: number
@@ -8,6 +10,7 @@ interface ApprovalRoute {
   steps: number
 }
 
+// TODO: バックエンドから承認ルート一覧を取得する実装に置き換え
 const mockRoutes: ApprovalRoute[] = [
   {
     id: 1,
@@ -36,11 +39,14 @@ const mockRoutes: ApprovalRoute[] = [
 ]
 
 export default function ApprovalCreate() {
+  const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [selectedRoute, setSelectedRoute] = useState<number | null>(null)
   const [files, setFiles] = useState<File[]>([])
   const [showSuccess, setShowSuccess] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -52,18 +58,40 @@ export default function ApprovalCreate() {
     setFiles(files.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('申請作成:', { title, description, selectedRoute, files })
-    setShowSuccess(true)
-    setTimeout(() => {
-      setShowSuccess(false)
-      // Reset form
-      setTitle('')
-      setDescription('')
-      setSelectedRoute(null)
-      setFiles([])
-    }, 2000)
+
+    if (!title.trim() || !description.trim() || !selectedRoute) {
+      setError('すべての必須項目を入力してください')
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      setError(null)
+
+      // API呼び出し
+      const response = await approvalApi.createApproval({
+        title: title.trim(),
+        description: description.trim(),
+        route_id: selectedRoute,
+        attachments: files,
+      })
+
+      console.log('申請作成成功:', response)
+
+      setShowSuccess(true)
+
+      // 2秒後にダッシュボードへリダイレクト
+      setTimeout(() => {
+        navigate('/')
+      }, 2000)
+    } catch (err) {
+      console.error('申請作成失敗:', err)
+      setError('申請の作成に失敗しました。もう一度お試しください。')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const selectedRouteData = mockRoutes.find((r) => r.id === selectedRoute)
@@ -81,14 +109,25 @@ export default function ApprovalCreate() {
         </div>
       )}
 
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
+          <X className="w-5 h-5 text-red-600" />
+          <p className="text-sm font-medium text-red-800">{error}</p>
+        </div>
+      )}
+
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <button className="p-2 hover:bg-gray-100 rounded-lg">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <button
+          onClick={() => navigate('/')}
+          className="p-2 hover:bg-gray-100 rounded-lg"
+        >
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </button>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">新規申請作成</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-900">新規申請作成</h2>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
             承認が必要な申請を作成します
           </p>
         </div>
@@ -97,7 +136,7 @@ export default function ApprovalCreate() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Title */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             申請タイトル <span className="text-red-500">*</span>
           </label>
@@ -106,13 +145,13 @@ export default function ApprovalCreate() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="例: 新規取引先との業務委託契約"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
             required
           />
         </div>
 
         {/* Description */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             申請内容 <span className="text-red-500">*</span>
           </label>
@@ -121,7 +160,7 @@ export default function ApprovalCreate() {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="承認依頼の詳細を記入してください&#10;&#10;例:&#10;株式会社サンプルとの業務委託契約書の承認をお願いします。&#10;契約金額: 年間300万円&#10;契約期間: 2025年4月〜2026年3月"
             rows={8}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-sm sm:text-base"
             required
           />
           <p className="text-xs text-gray-500 mt-2">
@@ -130,7 +169,7 @@ export default function ApprovalCreate() {
         </div>
 
         {/* Route Selection */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
           <label className="block text-sm font-semibold text-gray-900 mb-4">
             承認ルート <span className="text-red-500">*</span>
           </label>
@@ -171,13 +210,13 @@ export default function ApprovalCreate() {
         </div>
 
         {/* File Upload */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
           <label className="block text-sm font-semibold text-gray-900 mb-4">
             添付ファイル <span className="text-gray-500">(任意)</span>
           </label>
 
           {/* Upload Button */}
-          <label className="flex items-center justify-center gap-2 p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary-500 hover:bg-primary-50 transition-colors">
+          <label className="flex items-center justify-center gap-2 p-4 sm:p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary-500 hover:bg-primary-50 transition-colors">
             <Upload className="w-5 h-5 text-gray-500" />
             <span className="text-sm font-medium text-gray-600">
               ファイルを選択
@@ -228,43 +267,54 @@ export default function ApprovalCreate() {
 
         {/* Preview */}
         {selectedRouteData && (
-          <div className="bg-primary-50 border border-primary-200 rounded-lg p-6">
+          <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 sm:p-6">
             <h3 className="text-sm font-semibold text-primary-900 mb-3">
               📋 承認フロー
             </h3>
-            <div className="flex items-center gap-2">
-              {Array.from({ length: selectedRouteData.steps }).map((_, i) => (
-                <div key={i} className="flex items-center">
-                  <div className="px-4 py-2 bg-white border border-primary-300 rounded-lg text-sm font-medium text-gray-700">
-                    承認者 {i + 1}
+            <div className="overflow-x-auto -mx-2 px-2">
+              <div className="flex items-center gap-2 min-w-max">
+                {Array.from({ length: selectedRouteData.steps }).map((_, i) => (
+                  <div key={i} className="flex items-center">
+                    <div className="px-3 sm:px-4 py-2 bg-white border border-primary-300 rounded-lg text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
+                      承認者 {i + 1}
+                    </div>
+                    {i < selectedRouteData.steps - 1 && (
+                      <div className="w-6 sm:w-8 h-0.5 bg-primary-300" />
+                    )}
                   </div>
-                  {i < selectedRouteData.steps - 1 && (
-                    <div className="w-8 h-0.5 bg-primary-300" />
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         )}
 
         {/* Submit Button */}
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <button
             type="button"
-            className="flex-1 px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+            onClick={() => navigate('/')}
+            disabled={isSubmitting}
+            className="flex-1 px-4 sm:px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             キャンセル
           </button>
           <button
             type="submit"
-            disabled={!isValid}
-            className={`flex-1 px-6 py-3 rounded-lg font-semibold text-white transition-colors ${
-              isValid
+            disabled={!isValid || isSubmitting}
+            className={`flex-1 px-4 sm:px-6 py-3 rounded-lg font-semibold text-white transition-colors flex items-center justify-center gap-2 ${
+              isValid && !isSubmitting
                 ? 'bg-primary-600 hover:bg-primary-700'
                 : 'bg-gray-300 cursor-not-allowed'
             }`}
           >
-            申請を作成
+            {isSubmitting ? (
+              <>
+                <Loader className="w-5 h-5 animate-spin" />
+                作成中...
+              </>
+            ) : (
+              '申請を作成'
+            )}
           </button>
         </div>
       </form>
