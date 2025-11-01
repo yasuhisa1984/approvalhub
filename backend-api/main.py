@@ -189,15 +189,20 @@ def get_approvals(
     conn = Depends(get_db)
 ):
     """承認一覧取得"""
+    print(f"[DEBUG] get_approvals called - tenant_id: {payload.get('tenant_id')}, user_id: {payload.get('user_id')}")
+
     cursor = conn.cursor()
 
     tenant_id = payload.get("tenant_id")
     user_id = payload.get("user_id")
 
     # RLS設定
+    print(f"[DEBUG] Setting RLS tenant_id: {tenant_id}")
     cursor.execute("SET app.current_tenant_id = %s", (tenant_id,))
+    conn.commit()
 
     # 承認一覧取得
+    print(f"[DEBUG] Executing query for tenant_id: {tenant_id}")
     query = """
         SELECT
             a.*,
@@ -214,10 +219,12 @@ def get_approvals(
         query += " AND a.status = %s"
         params.append(status)
 
-    query += " ORDER BY a.created_at DESC"
+    query += " ORDER BY a.created_at DESC LIMIT 100"
 
     cursor.execute(query, params)
+    print(f"[DEBUG] Query executed, fetching results...")
     approvals = cursor.fetchall()
+    print(f"[DEBUG] Found {len(approvals)} approvals")
 
     return approvals
 
