@@ -14,6 +14,8 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from urllib.parse import urlparse
+import socket
 
 # 環境変数読み込み
 load_dotenv()
@@ -47,10 +49,33 @@ JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
-# データベース接続
+# データベース接続（IPv4を強制）
 def get_db():
+    database_url = os.getenv("DATABASE_URL")
+
+    # URLをパース
+    parsed = urlparse(database_url)
+
+    # ホスト名をIPv4アドレスに解決
+    hostname = parsed.hostname
+    try:
+        # IPv4アドレスのみを取得
+        ipv4_addresses = [addr[4][0] for addr in socket.getaddrinfo(
+            hostname, None, socket.AF_INET, socket.SOCK_STREAM
+        )]
+        if ipv4_addresses:
+            hostname = ipv4_addresses[0]
+    except socket.gaierror:
+        # DNS解決失敗時はホスト名をそのまま使用
+        pass
+
+    # 接続パラメータを構築
     conn = psycopg2.connect(
-        os.getenv("DATABASE_URL"),
+        host=hostname,
+        port=parsed.port or 5432,
+        database=parsed.path.lstrip('/'),
+        user=parsed.username,
+        password=parsed.password,
         cursor_factory=RealDictCursor
     )
     try:
