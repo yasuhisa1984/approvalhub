@@ -26,9 +26,18 @@ export default function Login() {
     }
   }
 
-  const handleDemoLogin = (demoEmail: string) => {
-    setEmail(demoEmail)
-    setPassword('password')
+  const handleDemoLogin = async (demoEmail: string) => {
+    setError('')
+    setIsLoading(true)
+
+    try {
+      await login(demoEmail, 'password')
+      navigate('/')
+    } catch (err) {
+      setError('デモアカウントのログインに失敗しました')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -121,34 +130,39 @@ export default function Login() {
 
           {/* Demo Accounts */}
           <div className="mt-6 space-y-3">
-            <p className="text-xs font-semibold text-gray-900 mb-2">🚀 デモアカウント</p>
+            <div className="border-t border-gray-200 pt-4">
+              <p className="text-sm font-semibold text-gray-900 mb-3 text-center">🚀 デモで試す</p>
+              <p className="text-xs text-gray-600 mb-3 text-center">
+                ワンクリックでデモアカウントにログイン（パスワード: password）
+              </p>
 
-            <button
-              onClick={() => handleDemoLogin('superadmin@approvalhub.com')}
-              className="w-full p-3 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 text-left transition-colors"
-              disabled={isLoading}
-            >
-              <p className="text-xs font-semibold text-purple-900">スーパー管理者</p>
-              <p className="text-xs text-purple-700">superadmin@approvalhub.com</p>
-            </button>
+              <button
+                onClick={() => handleDemoLogin('yakkun@demo.com')}
+                className="w-full p-3 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 text-left transition-colors"
+                disabled={isLoading}
+              >
+                <p className="text-sm font-semibold text-purple-900">👑 やっくん隊長（管理者）</p>
+                <p className="text-xs text-purple-700">yakkun@demo.com</p>
+              </button>
 
-            <button
-              onClick={() => handleDemoLogin('admin@sample.co.jp')}
-              className="w-full p-3 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 text-left transition-colors"
-              disabled={isLoading}
-            >
-              <p className="text-xs font-semibold text-blue-900">テナント管理者</p>
-              <p className="text-xs text-blue-700">admin@sample.co.jp</p>
-            </button>
+              <button
+                onClick={() => handleDemoLogin('tanaka@demo.com')}
+                className="w-full p-3 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 text-left transition-colors mt-2"
+                disabled={isLoading}
+              >
+                <p className="text-sm font-semibold text-blue-900">👤 田中部長（マネージャー）</p>
+                <p className="text-xs text-blue-700">tanaka@demo.com</p>
+              </button>
 
-            <button
-              onClick={() => handleDemoLogin('suzuki@example.com')}
-              className="w-full p-3 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 text-left transition-colors"
-              disabled={isLoading}
-            >
-              <p className="text-xs font-semibold text-green-900">一般ユーザー</p>
-              <p className="text-xs text-green-700">suzuki@example.com</p>
-            </button>
+              <button
+                onClick={() => handleDemoLogin('sato@demo.com')}
+                className="w-full p-3 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 text-left transition-colors mt-2"
+                disabled={isLoading}
+              >
+                <p className="text-sm font-semibold text-green-900">👤 佐藤（一般ユーザー）</p>
+                <p className="text-xs text-green-700">sato@demo.com</p>
+              </button>
+            </div>
           </div>
         </div>
 
