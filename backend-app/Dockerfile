@@ -23,16 +23,28 @@ WORKDIR /var/www/html
 # アプリケーションコードをコピー
 COPY . .
 
-# vendorディレクトリを削除（クリーンインストールのため）
-RUN rm -rf vendor
+# デバッグ情報を出力
+RUN echo "=== PHP Version ===" && php -v
+RUN echo "=== Composer Version ===" && composer --version
+RUN echo "=== Current Directory ===" && pwd
+RUN echo "=== Files in Directory ===" && ls -la
 
-# Composer依存関係をインストール
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev 2>&1 || \
-    (echo "Composer install failed, trying without --no-dev" && \
-     composer install --no-interaction --prefer-dist --optimize-autoloader 2>&1)
+# vendorディレクトリを削除（クリーンインストールのため）
+RUN rm -rf vendor || true
+
+# Composer診断
+RUN composer diagnose || echo "Composer diagnose failed"
+
+# Composer依存関係をインストール（詳細ログ付き）
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev -vvv || \
+    (echo "===== Composer install with --no-dev failed, trying without it =====" && \
+     composer install --no-interaction --prefer-dist --optimize-autoloader -vvv)
+
+# インストール結果を確認
+RUN echo "=== Vendor Directory ===" && ls -la vendor/ || echo "Vendor directory not found"
 
 # Composerオートロード最適化
-RUN composer dump-autoload --optimize 2>&1 || echo "Autoload optimization skipped"
+RUN composer dump-autoload --optimize -vvv || echo "Autoload optimization skipped"
 
 # 権限設定
 RUN chown -R www-data:www-data /var/www/html \
