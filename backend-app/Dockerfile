@@ -157,29 +157,32 @@ ENV PORT=8080
 # Apache起動スクリプト
 RUN cat > /start.sh << 'STARTEOF'
 #!/bin/bash
+set -e
+
 # ポート設定を動的に変更
 sed -i "s/Listen 80/Listen ${PORT}/" /etc/apache2/ports.conf
 sed -i "s/:80>/:${PORT}>/" /etc/apache2/sites-available/000-default.conf
 
 # 環境変数を.envファイルに書き出し（BEAR.Sunday用）
-cat > /var/www/html/.env << ENVEOF
-DATABASE_URL=${DATABASE_URL}
-JWT_SECRET=${JWT_SECRET}
-APP_ENV=${APP_ENV}
-APP_DEBUG=${APP_DEBUG}
-APP_URL=${APP_URL}
-FRONTEND_URL=${FRONTEND_URL}
-STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
-STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
-STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
-SENDGRID_API_KEY=${SENDGRID_API_KEY:-}
-SENDGRID_FROM_EMAIL=${SENDGRID_FROM_EMAIL:-}
-SENDGRID_FROM_NAME=${SENDGRID_FROM_NAME:-}
-AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
-AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
-AWS_REGION=${AWS_REGION:-ap-northeast-1}
-AWS_S3_BUCKET=${AWS_S3_BUCKET:-}
-ENVEOF
+# echoを使って改行問題を回避
+{
+  echo "DATABASE_URL=${DATABASE_URL}"
+  echo "JWT_SECRET=${JWT_SECRET}"
+  echo "APP_ENV=${APP_ENV}"
+  echo "APP_DEBUG=${APP_DEBUG}"
+  echo "APP_URL=${APP_URL}"
+  echo "FRONTEND_URL=${FRONTEND_URL}"
+  echo "STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}"
+  echo "STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}"
+  echo "STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}"
+  echo "SENDGRID_API_KEY=${SENDGRID_API_KEY:-}"
+  echo "SENDGRID_FROM_EMAIL=${SENDGRID_FROM_EMAIL:-}"
+  echo "SENDGRID_FROM_NAME=${SENDGRID_FROM_NAME:-}"
+  echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}"
+  echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}"
+  echo "AWS_REGION=${AWS_REGION:-ap-northeast-1}"
+  echo "AWS_S3_BUCKET=${AWS_S3_BUCKET:-}"
+} > /var/www/html/.env
 
 echo "=== Generated .env file ==="
 cat /var/www/html/.env
