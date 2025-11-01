@@ -1,0 +1,69 @@
+# ApprovalHub Backend (BEAR.Sunday) Dockerfile
+FROM php:8.2-apache
+
+# システムパッケージのインストール
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libpq-dev \
+    libzip-dev \
+    && docker-php-ext-install pdo pdo_pgsql zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Composerのインストール
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Apacheモジュール有効化
+RUN a2enmod rewrite headers
+
+# 作業ディレクトリ
+WORKDIR /var/www/html
+
+# Composerファイルをコピー
+COPY composer.json composer.lock* ./
+
+# Composer依存関係をインストール（開発環境用パッケージは除外）
+RUN composer install --no-dev --optimize-autoloader --no-scripts || \
+    composer install --optimize-autoloader --no-scripts
+
+# アプリケーションコードをコピー
+COPY . .
+
+# Composerオートロード最適化
+RUN composer dump-autoload --optimize
+
+# 権限設定
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && chmod -R 777 /var/www/html/var/tmp \
+    && chmod -R 777 /var/www/html/var/log
+
+# Apache設定
+RUN echo '<VirtualHost *:${PORT:-8080}>\n\
+    ServerAdmin admin@approvalhub.local\n\
+    DocumentRoot /var/www/html/public\n\
+    \n\
+    <Directory /var/www/html/public>\n\
+        Options -Indexes +FollowSymLinks\n\
+        AllowOverride All\n\
+        Require all granted\n\
+        \n\
+        # CORS設定\n\
+        Header set Access-Control-Allow-Origin "*"\n\
+        Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"\n\
+        Header set Access-Control-Allow-Headers "Content-Type, Authorization"\n\
+    </Directory>\n\
+    \n\
+    ErrorLog ${APACHE_LOG_DIR}/error.log\n\
+    CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+
+# ポート設定（Renderの動的ポート対応）
+ENV PORT=8080
+RUN sed -i "s/Listen 80/Listen \${PORT}/" /etc/apache2/ports.conf
+
+EXPOSE ${PORT}
+
+# Apache起動
+CMD ["apache2-foreground"]
