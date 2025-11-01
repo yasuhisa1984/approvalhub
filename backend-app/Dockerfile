@@ -55,66 +55,8 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 777 /var/www/html/var/tmp \
     && chmod -R 777 /var/www/html/var/log
 
-# デバッグ用の簡易index.phpを作成（一時的）
-RUN cat > public/index.php << 'PHPEOF'
-<?php
-error_reporting(E_ALL);
-ini_set("display_errors", "1");
-
-echo "<h1>ApprovalHub Backend Status</h1>";
-echo "<h2>Environment Check</h2>";
-echo "<pre>";
-echo "PHP Version: " . phpversion() . "\n";
-echo "Working Directory: " . getcwd() . "\n";
-
-echo "\n=== \$_ENV Variables ===\n";
-foreach ($_ENV as $key => $value) {
-    if (strpos($key, 'DATABASE') !== false || strpos($key, 'JWT') !== false || strpos($key, 'APP_') !== false) {
-        echo "$key: " . (empty($value) ? "(empty)" : "✓ Set") . "\n";
-    }
-}
-
-echo "\n=== getenv() Variables ===\n";
-echo "DATABASE_URL: " . (getenv("DATABASE_URL") ? "✓ Set (" . substr(getenv("DATABASE_URL"), 0, 20) . "...)" : "✗ Not Set") . "\n";
-echo "JWT_SECRET: " . (getenv("JWT_SECRET") ? "✓ Set" : "✗ Not Set") . "\n";
-echo "APP_ENV: " . (getenv("APP_ENV") ?: "(empty)") . "\n";
-
-echo "\n.env file exists: " . (file_exists("/var/www/html/.env") ? "✓ Yes" : "✗ No") . "\n";
-if (file_exists("/var/www/html/.env")) {
-    $envContent = file_get_contents("/var/www/html/.env");
-    echo ".env file size: " . strlen($envContent) . " bytes\n";
-    echo ".env contents (first 500 chars):\n" . substr($envContent, 0, 500) . "\n";
-}
-
-echo "\nAutoload exists: " . (file_exists(__DIR__ . "/../autoload.php") ? "✓ Yes" : "✗ No") . "\n";
-echo "Bootstrap exists: " . (file_exists(__DIR__ . "/../src/Bootstrap.php") ? "✓ Yes" : "✗ No") . "\n";
-echo "</pre>";
-
-echo "<h2>Testing BEAR.Sunday Bootstrap</h2>";
-echo "<pre>";
-try {
-    require __DIR__ . "/../autoload.php";
-    echo "✓ Autoload successful\n";
-
-    if (class_exists("MyVendor\ApprovalHub\Bootstrap")) {
-        echo "✓ Bootstrap class found\n";
-        $bootstrap = new MyVendor\ApprovalHub\Bootstrap();
-        echo "✓ Bootstrap instantiated\n";
-
-        // Try to run it
-        $result = $bootstrap("prod-hal-app", $GLOBALS, $_SERVER);
-        echo "✓ Bootstrap executed successfully\n";
-        exit($result);
-    } else {
-        echo "✗ Bootstrap class not found\n";
-    }
-} catch (\Throwable $e) {
-    echo "✗ Error: " . $e->getMessage() . "\n";
-    echo "File: " . $e->getFile() . ":" . $e->getLine() . "\n";
-    echo "Stack trace:\n" . $e->getTraceAsString() . "\n";
-}
-echo "</pre>";
-PHPEOF
+# 本番用index.phpが存在しない場合のみデバッグ版で上書きしない
+# 既存のindex.phpを保持
 
 # Apache設定
 RUN echo '<VirtualHost *:80>\n\
