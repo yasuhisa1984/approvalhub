@@ -8,15 +8,23 @@ use BEAR\Resource\ResourceObject;
 
 class Index extends ResourceObject
 {
-    /** @var array{greeting: string} */
+    /** @var array{message: string, version: string, status: string} */
     public $body;
 
-    public function onGet(string $name = 'BEAR.Sunday'): static
+    public function onGet(): static
     {
         $this->body = [
-            'greeting' => 'Hello ' . $name,
+            'message' => 'ApprovalHub API is running',
+            'version' => '1.0.0',
+            'status' => 'healthy',
         ];
 
+        return $this;
+    }
+
+    public function onHead(): static
+    {
+        // HEAD requests return no body
         return $this;
     }
 }
