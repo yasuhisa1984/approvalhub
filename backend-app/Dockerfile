@@ -55,20 +55,41 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 777 /var/www/html/var/tmp \
     && chmod -R 777 /var/www/html/var/log
 
+# public/index.phpが存在するか確認（なければ作成）
+RUN if [ ! -f public/index.php ]; then \
+    mkdir -p public && \
+    echo '<?php\nphpinfo();\n' > public/index.php; \
+    fi
+
 # Apache設定
-RUN echo '<VirtualHost *:${PORT:-8080}>\n\
+RUN echo '<VirtualHost *:80>\n\
     ServerAdmin admin@approvalhub.local\n\
     DocumentRoot /var/www/html/public\n\
+    \n\
+    <Directory /var/www/html>\n\
+        Options -Indexes +FollowSymLinks\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
     \n\
     <Directory /var/www/html/public>\n\
         Options -Indexes +FollowSymLinks\n\
         AllowOverride All\n\
         Require all granted\n\
+        DirectoryIndex index.php\n\
         \n\
         # CORS設定\n\
-        Header set Access-Control-Allow-Origin "*"\n\
-        Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"\n\
-        Header set Access-Control-Allow-Headers "Content-Type, Authorization"\n\
+        Header always set Access-Control-Allow-Origin "*"\n\
+        Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"\n\
+        Header always set Access-Control-Allow-Headers "Content-Type, Authorization"\n\
+        \n\
+        # Rewrite設定（BEAR.Sunday用）\n\
+        <IfModule mod_rewrite.c>\n\
+            RewriteEngine On\n\
+            RewriteCond %{REQUEST_FILENAME} !-f\n\
+            RewriteCond %{REQUEST_FILENAME} !-d\n\
+            RewriteRule ^ index.php [QSA,L]\n\
+        </IfModule>\n\
     </Directory>\n\
     \n\
     ErrorLog ${APACHE_LOG_DIR}/error.log\n\
@@ -77,9 +98,16 @@ RUN echo '<VirtualHost *:${PORT:-8080}>\n\
 
 # ポート設定（Renderの動的ポート対応）
 ENV PORT=8080
-RUN sed -i "s/Listen 80/Listen \${PORT}/" /etc/apache2/ports.conf
+
+# Apache起動スクリプト
+RUN echo '#!/bin/bash\n\
+# ポート設定を動的に変更\n\
+sed -i "s/Listen 80/Listen ${PORT}/" /etc/apache2/ports.conf\n\
+sed -i "s/:80>/:${PORT}>/" /etc/apache2/sites-available/000-default.conf\n\
+exec apache2-foreground\n\
+' > /start.sh && chmod +x /start.sh
 
 EXPOSE ${PORT}
 
 # Apache起動
-CMD ["apache2-foreground"]
+CMD ["/start.sh"]
