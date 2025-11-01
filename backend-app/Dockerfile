@@ -105,6 +105,11 @@ set -e
 sed -i "s/Listen 80/Listen ${PORT}/" /etc/apache2/ports.conf
 sed -i "s/:80>/:${PORT}>/" /etc/apache2/sites-available/000-default.conf
 
+# BEAR.Sundayのキャッシュをクリア
+echo "=== Clearing BEAR.Sunday cache ==="
+rm -rf /var/www/html/var/tmp/*
+echo "Cache cleared"
+
 # 環境変数を.envファイルに書き出し（BEAR.Sunday用）
 # echoを使って改行問題を回避
 {
