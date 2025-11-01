@@ -118,7 +118,7 @@ export const authApi = {
    * ログイン
    */
   login: async (email: string, password: string) => {
-    const response = await api.post('/auth/login', { email, password });
+    const response = await api.post('/api/auth/login', { email, password });
     return response.data;
   },
 
@@ -126,7 +126,7 @@ export const authApi = {
    * ログアウト
    */
   logout: async () => {
-    const response = await api.post('/auth/logout');
+    const response = await api.post('/api/auth/logout');
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('user');
     localStorage.removeItem('tenant_id');
@@ -137,7 +137,7 @@ export const authApi = {
    * ユーザー情報取得
    */
   getUser: async () => {
-    const response = await api.get('/user');
+    const response = await api.get('/api/user');
     return response.data;
   },
 };
@@ -150,7 +150,7 @@ export const approvalApi = {
    * 承認一覧取得
    */
   getApprovals: async (params?: { status?: string; limit?: number; page?: number }) => {
-    const response = await api.get('/approvals', { params });
+    const response = await api.get('/api/approvals', { params });
     return response.data;
   },
 
@@ -158,7 +158,7 @@ export const approvalApi = {
    * 承認詳細取得
    */
   getApprovalById: async (id: number) => {
-    const response = await api.get(`/approvals/${id}`);
+    const response = await api.get(`/api/approvals/${id}`);
     return response.data;
   },
 
@@ -171,7 +171,7 @@ export const approvalApi = {
     route_id: number;
     attachments?: File[];
   }) => {
-    const response = await api.post('/approvals', data);
+    const response = await api.post('/api/approvals', data);
     return response.data;
   },
 
@@ -179,7 +179,7 @@ export const approvalApi = {
    * 承認実行
    */
   approve: async (id: number, comment?: string) => {
-    const response = await api.post(`/approvals/${id}/approve`, { comment });
+    const response = await api.post(`/api/approvals/${id}/approve`, { comment });
     return response.data;
   },
 
@@ -187,7 +187,7 @@ export const approvalApi = {
    * 差し戻し実行
    */
   reject: async (id: number, comment?: string) => {
-    const response = await api.post(`/approvals/${id}/reject`, { comment });
+    const response = await api.post(`/api/approvals/${id}/reject`, { comment });
     return response.data;
   },
 };
@@ -200,7 +200,7 @@ export const userApi = {
    * ユーザー一覧取得
    */
   getUsers: async () => {
-    const response = await api.get('/users');
+    const response = await api.get('/api/users');
     return response.data;
   },
 
@@ -208,7 +208,7 @@ export const userApi = {
    * ユーザー招待
    */
   inviteUser: async (data: { email: string; name: string; role: string }) => {
-    const response = await api.post('/users/invite', data);
+    const response = await api.post('/api/users/invite', data);
     return response.data;
   },
 };
@@ -221,7 +221,7 @@ export const notificationApi = {
    * 通知一覧取得
    */
   getNotifications: async () => {
-    const response = await api.get('/notifications');
+    const response = await api.get('/api/notifications');
     return response.data;
   },
 
@@ -229,7 +229,7 @@ export const notificationApi = {
    * 通知を既読にする
    */
   markAsRead: async (id: number) => {
-    const response = await api.post(`/notifications/${id}/read`);
+    const response = await api.post(`/api/notifications/${id}/read`);
     return response.data;
   },
 };
@@ -245,7 +245,7 @@ export const fileApi = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await api.post('/files/upload', formData, {
+    const response = await api.post('/api/files/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
