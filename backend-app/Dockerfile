@@ -46,6 +46,9 @@ RUN echo "=== Vendor Directory ===" && ls -la vendor/ || echo "Vendor directory 
 # Composerオートロード最適化
 RUN composer dump-autoload --optimize -vvv || echo "Autoload optimization skipped"
 
+# 必要なディレクトリを作成
+RUN mkdir -p var/tmp var/log var/tmp/cache var/tmp/di
+
 # 権限設定
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
