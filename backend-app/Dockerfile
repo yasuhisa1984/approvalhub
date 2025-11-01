@@ -55,11 +55,53 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 777 /var/www/html/var/tmp \
     && chmod -R 777 /var/www/html/var/log
 
-# public/index.phpが存在するか確認（なければ作成）
-RUN if [ ! -f public/index.php ]; then \
-    mkdir -p public && \
-    echo '<?php\nphpinfo();\n' > public/index.php; \
-    fi
+# デバッグ用の簡易index.phpを作成（一時的）
+RUN mkdir -p public && echo '<?php\n\
+error_reporting(E_ALL);\n\
+ini_set("display_errors", "1");\n\
+\n\
+echo "<h1>ApprovalHub Backend Status</h1>";\n\
+echo "<h2>Environment Check</h2>";\n\
+echo "<pre>";\n\
+echo "PHP Version: " . phpversion() . "\n";\n\
+echo "Working Directory: " . getcwd() . "\n";\n\
+echo "\nEnvironment Variables:\n";\n\
+echo "DATABASE_URL: " . (getenv("DATABASE_URL") ? "✓ Set" : "✗ Not Set") . "\n";\n\
+echo "JWT_SECRET: " . (getenv("JWT_SECRET") ? "✓ Set" : "✗ Not Set") . "\n";\n\
+echo "APP_ENV: " . getenv("APP_ENV") . "\n";\n\
+echo "\n.env file exists: " . (file_exists("/var/www/html/.env") ? "✓ Yes" : "✗ No") . "\n";\n\
+if (file_exists("/var/www/html/.env")) {\n\
+    echo ".env contents:\n" . file_get_contents("/var/www/html/.env") . "\n";\n\
+}\n\
+echo "\nAutoload exists: " . (file_exists(__DIR__ . "/../autoload.php") ? "✓ Yes" : "✗ No") . "\n";\n\
+echo "Bootstrap exists: " . (file_exists(__DIR__ . "/../src/Bootstrap.php") ? "✓ Yes" : "✗ No") . "\n";\n\
+echo "</pre>";\n\
+\n\
+echo "<h2>Testing BEAR.Sunday Bootstrap</h2>";\n\
+echo "<pre>";\n\
+try {\n\
+    require __DIR__ . "/../autoload.php";\n\
+    echo "✓ Autoload successful\n";\n\
+    \n\
+    if (class_exists("MyVendor\\\\ApprovalHub\\\\Bootstrap")) {\n\
+        echo "✓ Bootstrap class found\n";\n\
+        $bootstrap = new MyVendor\\\\ApprovalHub\\\\Bootstrap();\n\
+        echo "✓ Bootstrap instantiated\n";\n\
+        \n\
+        // Try to run it\n\
+        $result = $bootstrap("prod-hal-app", $GLOBALS, $_SERVER);\n\
+        echo "✓ Bootstrap executed successfully\n";\n\
+        exit($result);\n\
+    } else {\n\
+        echo "✗ Bootstrap class not found\n";\n\
+    }\n\
+} catch (\\\\Throwable $e) {\n\
+    echo "✗ Error: " . $e->getMessage() . "\n";\n\
+    echo "File: " . $e->getFile() . ":" . $e->getLine() . "\n";\n\
+    echo "Stack trace:\n" . $e->getTraceAsString() . "\n";\n\
+}\n\
+echo "</pre>";\n\
+' > public/index.php
 
 # Apache設定
 RUN echo '<VirtualHost *:80>\n\
