@@ -20,18 +20,19 @@ RUN a2enmod rewrite headers
 # 作業ディレクトリ
 WORKDIR /var/www/html
 
-# Composerファイルをコピー
-COPY composer.json composer.lock* ./
-
-# Composer依存関係をインストール（開発環境用パッケージは除外）
-RUN composer install --no-dev --optimize-autoloader --no-scripts || \
-    composer install --optimize-autoloader --no-scripts
-
 # アプリケーションコードをコピー
 COPY . .
 
+# vendorディレクトリを削除（クリーンインストールのため）
+RUN rm -rf vendor
+
+# Composer依存関係をインストール
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev 2>&1 || \
+    (echo "Composer install failed, trying without --no-dev" && \
+     composer install --no-interaction --prefer-dist --optimize-autoloader 2>&1)
+
 # Composerオートロード最適化
-RUN composer dump-autoload --optimize
+RUN composer dump-autoload --optimize 2>&1 || echo "Autoload optimization skipped"
 
 # 権限設定
 RUN chown -R www-data:www-data /var/www/html \
