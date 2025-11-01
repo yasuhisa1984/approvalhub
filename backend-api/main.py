@@ -260,27 +260,36 @@ def get_approval_by_id(
     approval = cursor.fetchone()
 
     if not approval:
+        print(f"[DEBUG] Approval {approval_id} not found for tenant {tenant_id}")
         raise HTTPException(status_code=404, detail="Approval not found")
 
+    print(f"[DEBUG] Found approval: {approval_id}, fetching histories...")
+
     # 承認履歴を取得
-    cursor.execute(
-        """
-        SELECT
-            ah.*,
-            u.name as approver_name
-        FROM approval_histories ah
-        LEFT JOIN users u ON ah.approver_id = u.id
-        WHERE ah.approval_id = %s
-        ORDER BY ah.created_at ASC
-        """,
-        (approval_id,)
-    )
-    histories = cursor.fetchall()
+    try:
+        cursor.execute(
+            """
+            SELECT
+                ah.*,
+                u.name as approver_name
+            FROM approval_histories ah
+            LEFT JOIN users u ON ah.approver_id = u.id
+            WHERE ah.approval_id = %s
+            ORDER BY ah.created_at ASC
+            LIMIT 100
+            """,
+            (approval_id,)
+        )
+        histories = cursor.fetchall()
+        print(f"[DEBUG] Found {len(histories)} histories")
+    except Exception as e:
+        print(f"[DEBUG] Error fetching histories: {e}")
+        histories = []
 
     result = dict(approval)
     result['histories'] = histories
 
-    print(f"[DEBUG] Found approval: {approval_id}")
+    print(f"[DEBUG] Returning approval data for: {approval_id}")
     return result
 
 @app.get("/api/users", response_model=List[User])
