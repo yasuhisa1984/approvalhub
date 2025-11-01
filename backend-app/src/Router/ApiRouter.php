@@ -55,12 +55,11 @@ class ApiRouter implements RouterInterface
         // Convert HTTP method to BEAR method
         $bearMethod = strtolower($method);
 
-        // RouterMatch expects: uri, method, query
-        // Make sure the method is properly separated from URI
+        // RouterMatch constructor: ($uri, $method, $query)
         return new RouterMatch(
-            uri: $resourceUri,
-            method: $bearMethod,
-            query: $query
+            $resourceUri,
+            $bearMethod,
+            $query
         );
     }
 
