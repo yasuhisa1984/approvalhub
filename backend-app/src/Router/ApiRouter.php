@@ -45,11 +45,11 @@ class ApiRouter implements RouterInterface
             // API routes -> app resources
             $apiPath = substr($path, 4); // Remove '/api' prefix
             $apiPath = trim($apiPath, '/');
-            $resourceUri = 'app://self/' . $apiPath;
+            $resourceUri = 'app://self/' . ($apiPath === '' ? 'index' : $apiPath);
         } else {
             // Web routes -> page resources
             $pagePath = trim($path, '/');
-            $resourceUri = 'page://self/' . $pagePath;
+            $resourceUri = 'page://self/' . ($pagePath === '' ? 'index' : $pagePath);
         }
 
         // Convert HTTP method to BEAR method
