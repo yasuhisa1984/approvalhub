@@ -228,6 +228,61 @@ def get_approvals(
 
     return approvals
 
+@app.get("/api/approvals/{approval_id}")
+def get_approval_by_id(
+    approval_id: int,
+    payload: dict = Depends(verify_token),
+    conn = Depends(get_db)
+):
+    """承認詳細取得"""
+    print(f"[DEBUG] get_approval_by_id called - approval_id: {approval_id}")
+
+    cursor = conn.cursor()
+    tenant_id = payload.get("tenant_id")
+
+    # RLS設定
+    cursor.execute("SET app.current_tenant_id = %s", (tenant_id,))
+    conn.commit()
+
+    # 承認詳細取得（承認履歴も含む）
+    query = """
+        SELECT
+            a.*,
+            u.name as applicant_name,
+            r.name as route_name
+        FROM approvals a
+        INNER JOIN users u ON a.applicant_id = u.id
+        INNER JOIN approval_routes r ON a.route_id = r.id
+        WHERE a.id = %s AND a.tenant_id = %s
+    """
+
+    cursor.execute(query, (approval_id, tenant_id))
+    approval = cursor.fetchone()
+
+    if not approval:
+        raise HTTPException(status_code=404, detail="Approval not found")
+
+    # 承認履歴を取得
+    cursor.execute(
+        """
+        SELECT
+            ah.*,
+            u.name as approver_name
+        FROM approval_histories ah
+        LEFT JOIN users u ON ah.approver_id = u.id
+        WHERE ah.approval_id = %s
+        ORDER BY ah.created_at ASC
+        """,
+        (approval_id,)
+    )
+    histories = cursor.fetchall()
+
+    result = dict(approval)
+    result['histories'] = histories
+
+    print(f"[DEBUG] Found approval: {approval_id}")
+    return result
+
 @app.get("/api/users", response_model=List[User])
 def get_users(
     payload: dict = Depends(verify_token),
