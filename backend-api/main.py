@@ -56,28 +56,32 @@ def get_db():
     # URLをパース
     parsed = urlparse(database_url)
 
-    # ホスト名をIPv4アドレスに解決
-    hostname = parsed.hostname
+    # 接続パラメータを構築（sslmode=requireを追加してIPv6問題を回避）
+    conn_params = {
+        "host": parsed.hostname,
+        "port": parsed.port or 5432,
+        "database": parsed.path.lstrip('/'),
+        "user": parsed.username,
+        "password": parsed.password,
+        "cursor_factory": RealDictCursor,
+        "sslmode": "require",
+        "connect_timeout": 10
+    }
+
+    # IPv4を強制するためにoptions設定を追加
+    # Supabaseは常にIPv4アドレスも提供しているので、
+    # gethostbyname()でIPv4アドレスを取得
     try:
         # IPv4アドレスのみを取得
-        ipv4_addresses = [addr[4][0] for addr in socket.getaddrinfo(
-            hostname, None, socket.AF_INET, socket.SOCK_STREAM
-        )]
-        if ipv4_addresses:
-            hostname = ipv4_addresses[0]
-    except socket.gaierror:
+        import socket
+        ipv4_addr = socket.gethostbyname(parsed.hostname)
+        conn_params["host"] = ipv4_addr
+    except Exception as e:
         # DNS解決失敗時はホスト名をそのまま使用
+        print(f"Failed to resolve IPv4 address: {e}")
         pass
 
-    # 接続パラメータを構築
-    conn = psycopg2.connect(
-        host=hostname,
-        port=parsed.port or 5432,
-        database=parsed.path.lstrip('/'),
-        user=parsed.username,
-        password=parsed.password,
-        cursor_factory=RealDictCursor
-    )
+    conn = psycopg2.connect(**conn_params)
     try:
         yield conn
     finally:
