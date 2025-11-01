@@ -286,8 +286,28 @@ def get_approval_by_id(
         print(f"[DEBUG] Error fetching histories: {e}")
         histories = []
 
+    # フロントエンドが期待する形式に変換
     result = dict(approval)
-    result['histories'] = histories
+
+    # applicant オブジェクトを作成
+    result['applicant'] = {
+        'id': result.get('applicant_id'),
+        'name': result.get('applicant_name')
+    }
+
+    # historiesを変換（user オブジェクトを含む形式に）
+    formatted_histories = []
+    for h in histories:
+        history_dict = dict(h)
+        history_dict['user'] = {
+            'name': history_dict.get('approver_name', 'システム')
+        }
+        formatted_histories.append(history_dict)
+
+    result['histories'] = formatted_histories
+
+    # total_steps を追加（route情報から取得する必要があるが、とりあえず仮の値）
+    result['total_steps'] = result.get('total_steps', 3)
 
     print(f"[DEBUG] Returning approval data for: {approval_id}")
     return result
