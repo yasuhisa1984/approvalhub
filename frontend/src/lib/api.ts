@@ -163,6 +163,14 @@ export const approvalApi = {
   },
 
   /**
+   * 承認ルート一覧取得
+   */
+  getApprovalRoutes: async () => {
+    const response = await api.get('/api/approval-routes');
+    return response.data;
+  },
+
+  /**
    * 承認申請作成
    */
   createApproval: async (data: {

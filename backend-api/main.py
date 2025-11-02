@@ -228,6 +228,103 @@ def get_approvals(
 
     return approvals
 
+class CreateApprovalRequest(BaseModel):
+    title: str
+    description: Optional[str] = None
+    route_id: int
+
+@app.post("/api/approvals")
+def create_approval(
+    request_body: CreateApprovalRequest,
+    payload: dict = Depends(verify_token),
+    conn = Depends(get_db)
+):
+    """新規承認申請を作成"""
+    print(f"[DEBUG] create_approval called - title: {request_body.title}")
+
+    cursor = conn.cursor()
+    tenant_id = payload.get("tenant_id")
+    user_id = payload.get("user_id")
+
+    # RLS設定
+    cursor.execute("SET app.current_tenant_id = %s", (tenant_id,))
+    conn.commit()
+
+    # 承認ルートの存在確認
+    cursor.execute(
+        "SELECT * FROM approval_routes WHERE id = %s AND tenant_id = %s AND deleted_at IS NULL",
+        (request_body.route_id, tenant_id)
+    )
+    route = cursor.fetchone()
+
+    if not route:
+        raise HTTPException(status_code=404, detail="Approval route not found")
+
+    # 新規承認申請を作成
+    cursor.execute(
+        """
+        INSERT INTO approvals (
+            tenant_id, route_id, applicant_id, title, description,
+            status, current_step, created_at, updated_at
+        )
+        VALUES (%s, %s, %s, %s, %s, 'pending', 1, NOW(), NOW())
+        RETURNING id
+        """,
+        (tenant_id, request_body.route_id, user_id, request_body.title, request_body.description)
+    )
+
+    result = cursor.fetchone()
+    approval_id = result["id"]
+
+    conn.commit()
+
+    print(f"[DEBUG] Created approval: {approval_id}")
+
+    return {
+        "success": True,
+        "message": "承認申請を作成しました",
+        "approval_id": approval_id
+    }
+
+@app.get("/api/approval-routes")
+def get_approval_routes(
+    payload: dict = Depends(verify_token),
+    conn = Depends(get_db)
+):
+    """承認ルート一覧取得"""
+    print(f"[DEBUG] get_approval_routes called")
+
+    cursor = conn.cursor()
+    tenant_id = payload.get("tenant_id")
+
+    # RLS設定
+    cursor.execute("SET app.current_tenant_id = %s", (tenant_id,))
+    conn.commit()
+
+    # 承認ルート一覧を取得
+    cursor.execute(
+        """
+        SELECT
+            ar.id,
+            ar.name,
+            ar.description,
+            ar.is_active,
+            ar.created_at,
+            COUNT(ars.id) as step_count
+        FROM approval_routes ar
+        LEFT JOIN approval_route_steps ars ON ar.id = ars.route_id
+        WHERE ar.tenant_id = %s AND ar.deleted_at IS NULL AND ar.is_active = TRUE
+        GROUP BY ar.id, ar.name, ar.description, ar.is_active, ar.created_at
+        ORDER BY ar.created_at DESC
+        """,
+        (tenant_id,)
+    )
+
+    routes = cursor.fetchall()
+    print(f"[DEBUG] Found {len(routes)} approval routes")
+
+    return routes
+
 @app.get("/api/approvals/{approval_id}")
 def get_approval_by_id(
     approval_id: int,

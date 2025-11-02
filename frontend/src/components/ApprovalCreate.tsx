@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, CheckCircle, Upload, X, Loader } from 'lucide-react'
 import { approvalApi } from '../lib/api'
@@ -7,36 +7,8 @@ interface ApprovalRoute {
   id: number
   name: string
   description: string
-  steps: number
+  step_count: number
 }
-
-// TODO: バックエンドから承認ルート一覧を取得する実装に置き換え
-const mockRoutes: ApprovalRoute[] = [
-  {
-    id: 1,
-    name: '契約書承認フロー',
-    description: '新規取引先との契約書用 (2段階承認)',
-    steps: 2,
-  },
-  {
-    id: 2,
-    name: '経費申請フロー',
-    description: '10万円以上の経費申請用 (3段階承認)',
-    steps: 3,
-  },
-  {
-    id: 3,
-    name: '人事施策承認フロー',
-    description: '採用・異動・昇格等の人事関連 (3段階承認)',
-    steps: 3,
-  },
-  {
-    id: 4,
-    name: '簡易承認フロー',
-    description: '10万円未満の少額経費用 (1段階承認)',
-    steps: 1,
-  },
-]
 
 export default function ApprovalCreate() {
   const navigate = useNavigate()
@@ -47,6 +19,25 @@ export default function ApprovalCreate() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [routes, setRoutes] = useState<ApprovalRoute[]>([])
+  const [isLoadingRoutes, setIsLoadingRoutes] = useState(true)
+
+  // 承認ルート一覧を取得
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      try {
+        setIsLoadingRoutes(true)
+        const data = await approvalApi.getApprovalRoutes()
+        setRoutes(data)
+      } catch (err) {
+        console.error('承認ルート取得失敗:', err)
+        setError('承認ルートの取得に失敗しました')
+      } finally {
+        setIsLoadingRoutes(false)
+      }
+    }
+    fetchRoutes()
+  }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -82,9 +73,13 @@ export default function ApprovalCreate() {
 
       setShowSuccess(true)
 
-      // 2秒後にダッシュボードへリダイレクト
+      // 2秒後に作成した申請の詳細ページへリダイレクト
       setTimeout(() => {
-        navigate('/')
+        if (response.approval_id) {
+          navigate(`/approvals/${response.approval_id}`)
+        } else {
+          navigate('/')
+        }
       }, 2000)
     } catch (err) {
       console.error('申請作成失敗:', err)
@@ -94,7 +89,7 @@ export default function ApprovalCreate() {
     }
   }
 
-  const selectedRouteData = mockRoutes.find((r) => r.id === selectedRoute)
+  const selectedRouteData = routes.find((r) => r.id === selectedRoute)
   const isValid = title.trim() && description.trim() && selectedRoute
 
   return (
@@ -114,6 +109,16 @@ export default function ApprovalCreate() {
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
           <X className="w-5 h-5 text-red-600" />
           <p className="text-sm font-medium text-red-800">{error}</p>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isLoadingRoutes && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
+          <Loader className="w-5 h-5 text-blue-600 animate-spin" />
+          <p className="text-sm font-medium text-blue-800">
+            承認ルートを読み込み中...
+          </p>
         </div>
       )}
 
@@ -173,40 +178,51 @@ export default function ApprovalCreate() {
           <label className="block text-sm font-semibold text-gray-900 mb-4">
             承認ルート <span className="text-red-500">*</span>
           </label>
-          <div className="space-y-3">
-            {mockRoutes.map((route) => (
-              <label
-                key={route.id}
-                className={`flex items-start gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                  selectedRoute === route.id
-                    ? 'border-primary-500 bg-primary-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="route"
-                  value={route.id}
-                  checked={selectedRoute === route.id}
-                  onChange={() => setSelectedRoute(route.id)}
-                  className="mt-1 w-4 h-4 text-primary-600"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-gray-900">
-                      {route.name}
-                    </span>
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                      {route.steps}段階承認
-                    </span>
+          {isLoadingRoutes ? (
+            <div className="text-center py-8 text-gray-500">
+              <Loader className="w-6 h-6 animate-spin mx-auto mb-2" />
+              <p className="text-sm">承認ルートを読み込み中...</p>
+            </div>
+          ) : routes.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p className="text-sm">承認ルートが見つかりません</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {routes.map((route) => (
+                <label
+                  key={route.id}
+                  className={`flex items-start gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                    selectedRoute === route.id
+                      ? 'border-primary-500 bg-primary-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="route"
+                    value={route.id}
+                    checked={selectedRoute === route.id}
+                    onChange={() => setSelectedRoute(route.id)}
+                    className="mt-1 w-4 h-4 text-primary-600"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-gray-900">
+                        {route.name}
+                      </span>
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                        {route.step_count}段階承認
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {route.description}
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {route.description}
-                  </p>
-                </div>
-              </label>
-            ))}
-          </div>
+                </label>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* File Upload */}
@@ -273,12 +289,12 @@ export default function ApprovalCreate() {
             </h3>
             <div className="overflow-x-auto -mx-2 px-2">
               <div className="flex items-center gap-2 min-w-max">
-                {Array.from({ length: selectedRouteData.steps }).map((_, i) => (
+                {Array.from({ length: selectedRouteData.step_count }).map((_, i) => (
                   <div key={i} className="flex items-center">
                     <div className="px-3 sm:px-4 py-2 bg-white border border-primary-300 rounded-lg text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
                       承認者 {i + 1}
                     </div>
-                    {i < selectedRouteData.steps - 1 && (
+                    {i < selectedRouteData.step_count - 1 && (
                       <div className="w-6 sm:w-8 h-0.5 bg-primary-300" />
                     )}
                   </div>
