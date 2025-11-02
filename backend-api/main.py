@@ -312,6 +312,148 @@ def get_approval_by_id(
     print(f"[DEBUG] Returning approval data for: {approval_id}")
     return result
 
+class ApprovalActionRequest(BaseModel):
+    comment: Optional[str] = None
+
+@app.post("/api/approvals/{approval_id}/approve")
+def approve_approval(
+    approval_id: int,
+    request_body: ApprovalActionRequest,
+    payload: dict = Depends(verify_token),
+    conn = Depends(get_db)
+):
+    """承認を実行"""
+    print(f"[DEBUG] approve_approval called - approval_id: {approval_id}")
+
+    cursor = conn.cursor()
+    tenant_id = payload.get("tenant_id")
+    user_id = payload.get("user_id")
+
+    # RLS設定
+    cursor.execute("SET app.current_tenant_id = %s", (tenant_id,))
+    conn.commit()
+
+    # 承認情報を取得
+    cursor.execute(
+        "SELECT * FROM approvals WHERE id = %s AND tenant_id = %s",
+        (approval_id, tenant_id)
+    )
+    approval = cursor.fetchone()
+
+    if not approval:
+        raise HTTPException(status_code=404, detail="Approval not found")
+
+    if approval["status"] != "pending":
+        raise HTTPException(status_code=400, detail="This approval is not pending")
+
+    # 承認履歴を追加
+    cursor.execute(
+        """
+        INSERT INTO approval_histories (approval_id, step, approver_id, action, comment, created_at)
+        VALUES (%s, %s, %s, %s, %s, NOW())
+        """,
+        (approval_id, approval["current_step"], user_id, "approved", request_body.comment or "承認しました")
+    )
+
+    # current_stepを更新
+    new_step = approval["current_step"] + 1
+
+    # 最終ステップの場合はstatusをapprovedに
+    # とりあえず3ステップと仮定
+    if new_step > 3:
+        cursor.execute(
+            """
+            UPDATE approvals
+            SET status = 'approved', current_step = %s, updated_at = NOW()
+            WHERE id = %s
+            """,
+            (new_step, approval_id)
+        )
+        final_status = "approved"
+    else:
+        cursor.execute(
+            """
+            UPDATE approvals
+            SET current_step = %s, updated_at = NOW()
+            WHERE id = %s
+            """,
+            (new_step, approval_id)
+        )
+        final_status = "pending"
+
+    conn.commit()
+
+    print(f"[DEBUG] Approval {approval_id} approved by user {user_id}")
+
+    return {
+        "success": True,
+        "message": "承認しました",
+        "approval_id": approval_id,
+        "new_status": final_status,
+        "current_step": new_step
+    }
+
+@app.post("/api/approvals/{approval_id}/reject")
+def reject_approval(
+    approval_id: int,
+    request_body: ApprovalActionRequest,
+    payload: dict = Depends(verify_token),
+    conn = Depends(get_db)
+):
+    """承認を差し戻し"""
+    print(f"[DEBUG] reject_approval called - approval_id: {approval_id}")
+
+    cursor = conn.cursor()
+    tenant_id = payload.get("tenant_id")
+    user_id = payload.get("user_id")
+
+    # RLS設定
+    cursor.execute("SET app.current_tenant_id = %s", (tenant_id,))
+    conn.commit()
+
+    # 承認情報を取得
+    cursor.execute(
+        "SELECT * FROM approvals WHERE id = %s AND tenant_id = %s",
+        (approval_id, tenant_id)
+    )
+    approval = cursor.fetchone()
+
+    if not approval:
+        raise HTTPException(status_code=404, detail="Approval not found")
+
+    if approval["status"] != "pending":
+        raise HTTPException(status_code=400, detail="This approval is not pending")
+
+    # 承認履歴を追加
+    cursor.execute(
+        """
+        INSERT INTO approval_histories (approval_id, step, approver_id, action, comment, created_at)
+        VALUES (%s, %s, %s, %s, %s, NOW())
+        """,
+        (approval_id, approval["current_step"], user_id, "rejected", request_body.comment or "差し戻しました")
+    )
+
+    # ステータスをrejectedに更新
+    cursor.execute(
+        """
+        UPDATE approvals
+        SET status = 'rejected', updated_at = NOW()
+        WHERE id = %s
+        """,
+        (approval_id,)
+    )
+
+    conn.commit()
+
+    print(f"[DEBUG] Approval {approval_id} rejected by user {user_id}")
+
+    return {
+        "success": True,
+        "message": "差し戻しました",
+        "approval_id": approval_id,
+        "new_status": "rejected"
+    }
+
 @app.get("/api/users", response_model=List[User])
 def get_users(
     payload: dict = Depends(verify_token),
