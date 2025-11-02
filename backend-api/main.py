@@ -273,7 +273,7 @@ def get_approval_by_id(
                 ah.*,
                 u.name as approver_name
             FROM approval_histories ah
-            LEFT JOIN users u ON ah.approver_id = u.id
+            LEFT JOIN users u ON ah.user_id = u.id
             WHERE ah.approval_id = %s
             ORDER BY ah.created_at ASC
             LIMIT 100
@@ -349,7 +349,7 @@ def approve_approval(
     # 承認履歴を追加
     cursor.execute(
         """
-        INSERT INTO approval_histories (approval_id, step, approver_id, action, comment, created_at)
+        INSERT INTO approval_histories (approval_id, step_order, user_id, action, comment, created_at)
         VALUES (%s, %s, %s, %s, %s, NOW())
         """,
         (approval_id, approval["current_step"], user_id, "approved", request_body.comment or "承認しました")
@@ -427,7 +427,7 @@ def reject_approval(
     # 承認履歴を追加
     cursor.execute(
         """
-        INSERT INTO approval_histories (approval_id, step, approver_id, action, comment, created_at)
+        INSERT INTO approval_histories (approval_id, step_order, user_id, action, comment, created_at)
         VALUES (%s, %s, %s, %s, %s, NOW())
         """,
         (approval_id, approval["current_step"], user_id, "rejected", request_body.comment or "差し戻しました")
