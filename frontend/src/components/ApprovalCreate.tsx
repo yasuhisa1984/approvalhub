@@ -64,6 +64,7 @@ export default function ApprovalCreate() {
   const handleTemplateSelect = (template: FormTemplate) => {
     setSelectedTemplate(template)
     setFormData({}) // テンプレート変更時にフォームデータをリセット
+    setTitle(template.name) // テンプレート名を申請タイトルに自動設定
   }
 
   const handleFormDataChange = (fieldId: string, value: string | string[] | File | File[]) => {
@@ -76,7 +77,9 @@ export default function ApprovalCreate() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!title.trim() || !description.trim() || !selectedRoute) {
+    // テンプレート選択時は説明任意、未選択時は説明必須
+    const isDescriptionRequired = !selectedTemplate
+    if (!title.trim() || (isDescriptionRequired && !description.trim()) || !selectedRoute) {
       setError('すべての必須項目を入力してください')
       return
     }
@@ -175,27 +178,37 @@ export default function ApprovalCreate() {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="例: 新規取引先との業務委託契約"
+            placeholder={selectedTemplate ? "テンプレート選択時に自動入力されます" : "例: 新規取引先との業務委託契約"}
             className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
             required
           />
+          {selectedTemplate && (
+            <p className="text-xs text-gray-500 mt-2">
+              ※ テンプレート選択時は自動で入力されます（編集可能）
+            </p>
+          )}
         </div>
 
         {/* Description */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
-            申請内容 <span className="text-red-500">*</span>
+            申請内容 {!selectedTemplate && <span className="text-red-500">*</span>}
+            {selectedTemplate && <span className="text-gray-500">(任意)</span>}
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="承認依頼の詳細を記入してください&#10;&#10;例:&#10;株式会社サンプルとの業務委託契約書の承認をお願いします。&#10;契約金額: 年間300万円&#10;契約期間: 2025年4月〜2026年3月"
-            rows={8}
+            placeholder={selectedTemplate
+              ? "テンプレートの項目で入力した内容が申請内容となります。追加で記載したい内容があればここに入力してください。"
+              : "承認依頼の詳細を記入してください&#10;&#10;例:&#10;株式会社サンプルとの業務委託契約書の承認をお願いします。&#10;契約金額: 年間300万円&#10;契約期間: 2025年4月〜2026年3月"}
+            rows={selectedTemplate ? 4 : 8}
             className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-sm sm:text-base"
-            required
+            required={!selectedTemplate}
           />
           <p className="text-xs text-gray-500 mt-2">
-            承認者が判断しやすいよう、具体的に記載してください
+            {selectedTemplate
+              ? "※ テンプレート選択時は任意です"
+              : "承認者が判断しやすいよう、具体的に記載してください"}
           </p>
         </div>
 
@@ -283,6 +296,7 @@ export default function ApprovalCreate() {
               onClick={() => {
                 setSelectedTemplate(null)
                 setFormData({})
+                setTitle('') // タイトルもクリア
               }}
               className="mt-3 text-sm text-gray-600 hover:text-gray-900 underline"
             >
