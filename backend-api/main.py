@@ -346,6 +346,10 @@ def approve_approval(
     if approval["status"] != "pending":
         raise HTTPException(status_code=400, detail="This approval is not pending")
 
+    # 自己承認チェック
+    if approval["applicant_id"] == user_id:
+        raise HTTPException(status_code=403, detail="Cannot approve your own request")
+
     # 承認履歴を追加
     cursor.execute(
         """
@@ -423,6 +427,10 @@ def reject_approval(
 
     if approval["status"] != "pending":
         raise HTTPException(status_code=400, detail="This approval is not pending")
+
+    # 自己差し戻しチェック
+    if approval["applicant_id"] == user_id:
+        raise HTTPException(status_code=403, detail="Cannot reject your own request")
 
     # 承認履歴を追加
     cursor.execute(

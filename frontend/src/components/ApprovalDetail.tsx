@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, CheckCircle, XCircle, User, Clock, MessageSquare, Send, Paperclip, Loader } from 'lucide-react'
 import { approvalApi } from '../lib/api'
 import { Comment } from '../types/comment'
+import { useAuth } from '../contexts/AuthContext'
 
 interface ApprovalDetailType {
   id: number
@@ -26,6 +27,7 @@ interface ApprovalDetailType {
 export default function ApprovalDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [approval, setApproval] = useState<ApprovalDetailType | null>(null)
   const [comment, setComment] = useState('')
   const [showSuccess, setShowSuccess] = useState(false)
@@ -235,8 +237,8 @@ export default function ApprovalDetail() {
           </div>
         </div>
 
-        {/* Action Section */}
-        {approval.status === 'pending' && (
+        {/* Action Section - Only show if not own request */}
+        {approval.status === 'pending' && user && approval.applicant.id !== user.id && (
           <div className="p-4 sm:p-6 bg-gray-50">
             <h4 className="text-sm font-semibold text-gray-900 mb-3">承認アクション</h4>
             <div className="space-y-4">
