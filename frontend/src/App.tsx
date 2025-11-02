@@ -14,6 +14,10 @@ import AuditLogs from './components/AuditLogs'
 import TenantManagement from './components/SuperAdmin/TenantManagement'
 import ApiDocs from './components/ApiDocs'
 import LandingPage from './components/LandingPage'
+import Pricing from './components/Pricing'
+import Contact from './components/Contact'
+import Privacy from './components/Privacy'
+import Terms from './components/Terms'
 import Login from './components/Login'
 import Signup from './components/Signup'
 import PaymentSuccess from './components/PaymentSuccess'
@@ -40,6 +44,10 @@ function AppRoutes() {
       {!isAuthenticated ? (
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="*" element={<Navigate to="/" replace />} />
