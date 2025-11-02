@@ -177,6 +177,8 @@ export const approvalApi = {
     title: string;
     description: string;
     route_id: number;
+    template_id?: number;
+    form_data?: Record<string, any>;
     attachments?: File[];
   }) => {
     const response = await api.post('/api/approvals', data);

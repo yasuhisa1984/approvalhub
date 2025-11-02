@@ -9,6 +9,7 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime, timedelta
 import os
+import json
 from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -239,6 +240,8 @@ class CreateApprovalRequest(BaseModel):
     title: str
     description: Optional[str] = None
     route_id: int
+    template_id: Optional[int] = None
+    form_data: Optional[dict] = None
 
 @app.post("/api/approvals")
 def create_approval(
@@ -268,16 +271,20 @@ def create_approval(
         raise HTTPException(status_code=404, detail="Approval route not found")
 
     # 新規承認申請を作成
+    form_data_json = json.dumps(request_body.form_data) if request_body.form_data else None
+
     cursor.execute(
         """
         INSERT INTO approvals (
             tenant_id, route_id, applicant_id, title, description,
+            template_id, form_data,
             status, current_step, created_at, updated_at
         )
-        VALUES (%s, %s, %s, %s, %s, 'pending', 1, NOW(), NOW())
+        VALUES (%s, %s, %s, %s, %s, %s, %s, 'pending', 1, NOW(), NOW())
         RETURNING id
         """,
-        (tenant_id, request_body.route_id, user_id, request_body.title, request_body.description)
+        (tenant_id, request_body.route_id, user_id, request_body.title, request_body.description,
+         request_body.template_id, form_data_json)
     )
 
     result = cursor.fetchone()
