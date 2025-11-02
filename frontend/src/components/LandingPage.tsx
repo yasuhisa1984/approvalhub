@@ -116,8 +116,90 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ユースケースセクション */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              こんな承認業務に最適
+            </h2>
+            <p className="text-xl text-gray-600">
+              様々な業務フローに対応。導入企業の平均承認時間は<strong className="text-primary-600">70%短縮</strong>
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-xl">
+              <div className="text-4xl mb-4">📝</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">契約書承認</h3>
+              <p className="text-gray-700 mb-4">
+                取引先との契約書を複数の役職者に回覧。従来3日かかっていた承認が<strong>半日で完了</strong>。
+              </p>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600">✓</span>
+                  <span>申請者 → 部長 → 役員 の3段階承認</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600">✓</span>
+                  <span>契約書PDFの添付・履歴管理</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600">✓</span>
+                  <span>差し戻し時のコメント機能</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-xl">
+              <div className="text-4xl mb-4">💰</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">見積・発注承認</h3>
+              <p className="text-gray-700 mb-4">
+                金額に応じた承認ルートを自動設定。<strong>誤発注が90%減少</strong>し、コスト管理も向上。
+              </p>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600">✓</span>
+                  <span>10万円以下：課長承認のみ</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600">✓</span>
+                  <span>100万円以上：役員承認必須</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600">✓</span>
+                  <span>承認履歴で監査対応も万全</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-8 rounded-xl">
+              <div className="text-4xl mb-4">👥</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">取引先登録承認</h3>
+              <p className="text-gray-700 mb-4">
+                新規取引先の審査プロセスを効率化。<strong>登録リードタイム50%削減</strong>を実現。
+              </p>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600">✓</span>
+                  <span>営業 → 審査部 → 経理 の並列承認</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600">✓</span>
+                  <span>必要書類のチェックリスト機能</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-green-600">✓</span>
+                  <span>承認後、自動で基幹システム連携</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 機能セクション */}
-      <section id="features" className="py-20">
+      <section id="features" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
             主な機能
@@ -144,6 +226,41 @@ export default function LandingPage() {
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 社会的証明セクション */}
+      <section className="py-16 bg-white border-y border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-4 gap-8 text-center">
+            <div>
+              <div className="text-4xl font-bold text-primary-600 mb-2">3社</div>
+              <p className="text-gray-600">β導入企業</p>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-primary-600 mb-2">70%</div>
+              <p className="text-gray-600">承認時間短縮</p>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-primary-600 mb-2">1日</div>
+              <p className="text-gray-600">平均導入期間</p>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-primary-600 mb-2">100%</div>
+              <p className="text-gray-600">セキュア通信</p>
+            </div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <p className="text-sm text-gray-500 mb-4">導入企業様の声</p>
+            <div className="max-w-3xl mx-auto bg-gray-50 p-6 rounded-lg">
+              <p className="text-gray-700 italic mb-3">
+                「Excel管理からの脱却を検討していたところ、ApprovalHubに出会いました。
+                <strong>導入初日から使えて</strong>、承認待ちの滞留が激減しました。」
+              </p>
+              <p className="text-sm text-gray-600">— IT企業 管理部長（従業員50名）</p>
+            </div>
           </div>
         </div>
       </section>
