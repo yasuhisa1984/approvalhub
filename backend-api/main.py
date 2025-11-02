@@ -298,7 +298,7 @@ def get_approval_routes(
     payload: dict = Depends(verify_token),
     conn = Depends(get_db)
 ):
-    """承認ルート一覧取得"""
+    """承認ルート一覧取得（承認者情報含む）"""
     print(f"[DEBUG] get_approval_routes called")
 
     cursor = conn.cursor()
@@ -316,12 +316,9 @@ def get_approval_routes(
             ar.name,
             ar.description,
             ar.is_active,
-            ar.created_at,
-            COUNT(ars.id) as step_count
+            ar.created_at
         FROM approval_routes ar
-        LEFT JOIN approval_route_steps ars ON ar.id = ars.route_id
         WHERE ar.tenant_id = %s AND ar.deleted_at IS NULL AND ar.is_active = TRUE
-        GROUP BY ar.id, ar.name, ar.description, ar.is_active, ar.created_at
         ORDER BY ar.created_at DESC
         """,
         (tenant_id,)
@@ -330,7 +327,31 @@ def get_approval_routes(
     routes = cursor.fetchall()
     print(f"[DEBUG] Found {len(routes)} approval routes")
 
-    return routes
+    # 各ルートのステップ情報を取得
+    result = []
+    for route in routes:
+        cursor.execute(
+            """
+            SELECT
+                ars.step_order,
+                ars.approver_id,
+                u.name as approver_name,
+                ars.is_required
+            FROM approval_route_steps ars
+            LEFT JOIN users u ON ars.approver_id = u.id
+            WHERE ars.route_id = %s
+            ORDER BY ars.step_order ASC
+            """,
+            (route["id"],)
+        )
+        steps = cursor.fetchall()
+
+        route_dict = dict(route)
+        route_dict["step_count"] = len(steps)
+        route_dict["steps"] = [dict(step) for step in steps]
+        result.append(route_dict)
+
+    return result
 
 @app.get("/api/approvals/{approval_id}")
 def get_approval_by_id(

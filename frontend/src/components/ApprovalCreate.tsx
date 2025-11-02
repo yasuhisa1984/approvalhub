@@ -3,11 +3,19 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, CheckCircle, Upload, X, Loader } from 'lucide-react'
 import { approvalApi } from '../lib/api'
 
+interface ApprovalRouteStep {
+  step_order: number
+  approver_id: number
+  approver_name: string
+  is_required: boolean
+}
+
 interface ApprovalRoute {
   id: number
   name: string
   description: string
   step_count: number
+  steps: ApprovalRouteStep[]
 }
 
 export default function ApprovalCreate() {
@@ -282,19 +290,24 @@ export default function ApprovalCreate() {
         </div>
 
         {/* Preview */}
-        {selectedRouteData && (
+        {selectedRouteData && selectedRouteData.steps && selectedRouteData.steps.length > 0 && (
           <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 sm:p-6">
             <h3 className="text-sm font-semibold text-primary-900 mb-3">
               📋 承認フロー
             </h3>
             <div className="overflow-x-auto -mx-2 px-2">
               <div className="flex items-center gap-2 min-w-max">
-                {Array.from({ length: selectedRouteData.step_count }).map((_, i) => (
-                  <div key={i} className="flex items-center">
-                    <div className="px-3 sm:px-4 py-2 bg-white border border-primary-300 rounded-lg text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
-                      承認者 {i + 1}
+                {selectedRouteData.steps.map((step, i) => (
+                  <div key={step.step_order} className="flex items-center">
+                    <div className="px-3 sm:px-4 py-2 bg-white border border-primary-300 rounded-lg text-xs sm:text-sm whitespace-nowrap">
+                      <div className="font-medium text-gray-900">
+                        {step.approver_name}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {step.step_order}段階目
+                      </div>
                     </div>
-                    {i < selectedRouteData.step_count - 1 && (
+                    {i < selectedRouteData.steps.length - 1 && (
                       <div className="w-6 sm:w-8 h-0.5 bg-primary-300" />
                     )}
                   </div>
