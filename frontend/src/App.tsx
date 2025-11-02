@@ -13,6 +13,7 @@ import NotificationCenter from './components/NotificationCenter'
 import AuditLogs from './components/AuditLogs'
 import TenantManagement from './components/SuperAdmin/TenantManagement'
 import ApiDocs from './components/ApiDocs'
+import LandingPage from './components/LandingPage'
 import Login from './components/Login'
 import Signup from './components/Signup'
 import PaymentSuccess from './components/PaymentSuccess'
@@ -38,8 +39,10 @@ function AppRoutes() {
     <BrowserRouter>
       {!isAuthenticated ? (
         <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="*" element={<Login />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       ) : (
         <ImpersonationProvider>
