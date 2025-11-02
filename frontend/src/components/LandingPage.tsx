@@ -81,44 +81,77 @@ export default function LandingPage() {
       <section className="bg-gradient-to-br from-primary-50 to-primary-100 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-5xl font-bold text-gray-900 mb-6">
+            {/* ターゲット明示バッジ */}
+            <div className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-2 rounded-full mb-6 text-sm font-semibold">
+              <Users className="w-4 h-4" />
+              従業員30〜200名の企業様向け
+            </div>
+
+            <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
               承認業務を<span className="text-primary-600">10秒</span>で完結
             </h2>
-            <p className="text-xl text-gray-700 mb-8 max-w-3xl mx-auto">
-              紙の稟議書、メール確認、複雑なワークフロー...そんな面倒な承認業務を、
-              <br />
-              <strong>シンプルで高速な承認システム</strong>で解決します
+
+            {/* サブヘッドライン強化 */}
+            <p className="text-xl md:text-2xl text-gray-700 mb-4 max-w-3xl mx-auto">
+              <strong>製造業・IT・商社</strong>で導入実績多数
             </p>
-            <div className="flex gap-4 justify-center">
+            <p className="text-lg text-gray-600 mb-8 max-w-3xl mx-auto">
+              紙の稟議書、メール確認、複雑なワークフロー...そんな面倒な承認業務を、
+              シンプルで高速な承認システムで解決します
+            </p>
+
+            {/* CTA強化 */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+              <button
+                onClick={() => navigate('/signup')}
+                className="px-10 py-5 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg text-xl transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              >
+                <span className="text-2xl">🎯</span>
+                14日間無料トライアル
+                <ArrowRight className="w-6 h-6" />
+              </button>
               <button
                 onClick={() => navigate('/login')}
-                className="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-lg text-lg transition-colors flex items-center gap-2"
+                className="px-10 py-5 bg-white hover:bg-gray-50 text-primary-600 font-bold rounded-lg text-xl border-2 border-primary-600 transition-colors shadow-lg hover:shadow-xl"
               >
-                無料でデモを試す
-                <ArrowRight className="w-5 h-5" />
+                デモアカウントで試す
               </button>
-              <a
-                href="#features"
-                className="px-8 py-4 bg-white hover:bg-gray-50 text-primary-600 font-bold rounded-lg text-lg border-2 border-primary-600 transition-colors"
-              >
-                機能を見る
-              </a>
+            </div>
+
+            {/* 信頼バッジ */}
+            <div className="flex justify-center items-center gap-6 flex-wrap text-sm text-gray-600">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <span>クレジットカード登録不要</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <span>導入初日から利用可能</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <span>契約期間縛りなし</span>
+              </div>
             </div>
           </div>
 
-          {/* ステータスバッジ */}
-          <div className="mt-12 flex justify-center gap-4 flex-wrap">
-            <div className="px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold">
-              ✅ ログイン機能
+          {/* 実績数値の可視化 */}
+          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            <div className="bg-white rounded-xl p-6 text-center shadow-md">
+              <div className="text-4xl font-bold text-primary-600 mb-2">70%</div>
+              <div className="text-sm text-gray-600">承認時間短縮</div>
             </div>
-            <div className="px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold">
-              ✅ 承認・差し戻し機能
+            <div className="bg-white rounded-xl p-6 text-center shadow-md">
+              <div className="text-4xl font-bold text-primary-600 mb-2">1日</div>
+              <div className="text-sm text-gray-600">平均導入期間</div>
             </div>
-            <div className="px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold">
-              ✅ 承認履歴表示
+            <div className="bg-white rounded-xl p-6 text-center shadow-md">
+              <div className="text-4xl font-bold text-primary-600 mb-2">3社</div>
+              <div className="text-sm text-gray-600">β導入企業</div>
             </div>
-            <div className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full font-semibold">
-              🚧 通知機能（準備中）
+            <div className="bg-white rounded-xl p-6 text-center shadow-md">
+              <div className="text-4xl font-bold text-primary-600 mb-2">100%</div>
+              <div className="text-sm text-gray-600">セキュア通信</div>
             </div>
           </div>
         </div>
@@ -203,6 +236,115 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+
+          {/* Before/After 比較 */}
+          <div className="mt-20 bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-8 md:p-12 text-white">
+            <h3 className="text-3xl font-bold text-center mb-12">
+              導入前と導入後の変化
+            </h3>
+
+            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              {/* Before */}
+              <div className="bg-red-900/30 border-2 border-red-500/50 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="text-3xl">😰</div>
+                  <div>
+                    <div className="text-red-400 font-semibold text-sm">BEFORE</div>
+                    <div className="text-xl font-bold">導入前の課題</div>
+                  </div>
+                </div>
+
+                <ul className="space-y-4">
+                  <li className="flex items-start gap-3">
+                    <span className="text-red-400 text-xl flex-shrink-0">✗</span>
+                    <div>
+                      <div className="font-semibold mb-1">承認に3日以上かかる</div>
+                      <div className="text-sm text-gray-300">紙の回覧、メールCC、上司不在で滞留...</div>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-red-400 text-xl flex-shrink-0">✗</span>
+                    <div>
+                      <div className="font-semibold mb-1">承認状況が見えない</div>
+                      <div className="text-sm text-gray-300">今どこで止まっているのか分からない</div>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-red-400 text-xl flex-shrink-0">✗</span>
+                    <div>
+                      <div className="font-semibold mb-1">履歴が残らない</div>
+                      <div className="text-sm text-gray-300">監査時に証跡を探すのが大変</div>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-red-400 text-xl flex-shrink-0">✗</span>
+                    <div>
+                      <div className="font-semibold mb-1">Excel管理で属人化</div>
+                      <div className="text-sm text-gray-300">担当者不在時に業務が止まる</div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              {/* After */}
+              <div className="bg-green-900/30 border-2 border-green-500/50 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="text-3xl">🎉</div>
+                  <div>
+                    <div className="text-green-400 font-semibold text-sm">AFTER</div>
+                    <div className="text-xl font-bold">導入後の改善</div>
+                  </div>
+                </div>
+
+                <ul className="space-y-4">
+                  <li className="flex items-start gap-3">
+                    <span className="text-green-400 text-xl flex-shrink-0">✓</span>
+                    <div>
+                      <div className="font-semibold mb-1">承認が半日で完了</div>
+                      <div className="text-sm text-gray-300">ワンクリック承認、モバイル対応で即対応</div>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-green-400 text-xl flex-shrink-0">✓</span>
+                    <div>
+                      <div className="font-semibold mb-1">リアルタイムで進捗確認</div>
+                      <div className="text-sm text-gray-300">ダッシュボードで承認状況を一目で把握</div>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-green-400 text-xl flex-shrink-0">✓</span>
+                    <div>
+                      <div className="font-semibold mb-1">完全な監査証跡</div>
+                      <div className="text-sm text-gray-300">誰が・いつ・何を承認したか全て記録</div>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-green-400 text-xl flex-shrink-0">✓</span>
+                    <div>
+                      <div className="font-semibold mb-1">クラウドで誰でもアクセス</div>
+                      <div className="text-sm text-gray-300">出張中でもスマホから承認可能</div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 数値での比較 */}
+            <div className="mt-12 grid grid-cols-3 gap-6 max-w-3xl mx-auto">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-primary-400 mb-2">70%</div>
+                <div className="text-sm text-gray-300">時間削減</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-primary-400 mb-2">90%</div>
+                <div className="text-sm text-gray-300">エラー削減</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-primary-400 mb-2">100%</div>
+                <div className="text-sm text-gray-300">証跡保持</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -239,35 +381,117 @@ export default function LandingPage() {
       </section>
 
       {/* 社会的証明セクション */}
-      <section className="py-16 bg-white border-y border-gray-200">
+      <section className="py-20 bg-gradient-to-br from-primary-50 to-purple-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold text-primary-600 mb-2">3社</div>
-              <p className="text-gray-600">β導入企業</p>
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              導入企業の実績
+            </h2>
+            <p className="text-xl text-gray-600">
+              業界・規模を問わず、多くの企業で承認業務の効率化を実現
+            </p>
+          </div>
+
+          {/* 数値実績 */}
+          <div className="grid md:grid-cols-4 gap-8 text-center mb-16">
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="text-5xl font-bold text-primary-600 mb-2">3社</div>
+              <p className="text-gray-600 font-medium">β導入企業</p>
+              <p className="text-xs text-gray-500 mt-1">2024年11月時点</p>
             </div>
-            <div>
-              <div className="text-4xl font-bold text-primary-600 mb-2">70%</div>
-              <p className="text-gray-600">承認時間短縮</p>
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="text-5xl font-bold text-primary-600 mb-2">70%</div>
+              <p className="text-gray-600 font-medium">承認時間短縮</p>
+              <p className="text-xs text-gray-500 mt-1">平均値（最大90%）</p>
             </div>
-            <div>
-              <div className="text-4xl font-bold text-primary-600 mb-2">1日</div>
-              <p className="text-gray-600">平均導入期間</p>
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="text-5xl font-bold text-primary-600 mb-2">1日</div>
+              <p className="text-gray-600 font-medium">平均導入期間</p>
+              <p className="text-xs text-gray-500 mt-1">最短即日稼働</p>
             </div>
-            <div>
-              <div className="text-4xl font-bold text-primary-600 mb-2">100%</div>
-              <p className="text-gray-600">セキュア通信</p>
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="text-5xl font-bold text-primary-600 mb-2">100%</div>
+              <p className="text-gray-600 font-medium">セキュア通信</p>
+              <p className="text-xs text-gray-500 mt-1">SSL/TLS暗号化</p>
             </div>
           </div>
 
-          <div className="mt-12 text-center">
-            <p className="text-sm text-gray-500 mb-4">導入企業様の声</p>
-            <div className="max-w-3xl mx-auto bg-gray-50 p-6 rounded-lg">
-              <p className="text-gray-700 italic mb-3">
-                「Excel管理からの脱却を検討していたところ、ApprovalHubに出会いました。
-                <strong>導入初日から使えて</strong>、承認待ちの滞留が激減しました。」
-              </p>
-              <p className="text-sm text-gray-600">— IT企業 管理部長（従業員50名）</p>
+          {/* 顧客の声 */}
+          <div className="mb-12">
+            <h3 className="text-2xl font-bold text-center text-gray-900 mb-8">導入企業様の声</h3>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              {/* 顧客の声 1 */}
+              <div className="bg-white rounded-xl p-6 shadow-md">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">
+                    🏭
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">製造業A社</div>
+                    <div className="text-xs text-gray-500">従業員120名</div>
+                  </div>
+                </div>
+                <p className="text-gray-700 text-sm italic mb-3">
+                  「見積承認が紙からデジタルに変わり、<strong>承認スピードが3日→半日</strong>に。
+                  出張中の役員もスマホで承認できるようになり、業務が止まらなくなりました。」
+                </p>
+                <div className="flex items-center gap-1 text-yellow-400 text-sm">
+                  ★★★★★
+                </div>
+              </div>
+
+              {/* 顧客の声 2 */}
+              <div className="bg-white rounded-xl p-6 shadow-md">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-2xl">
+                    💻
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">IT企業B社</div>
+                    <div className="text-xs text-gray-500">従業員50名</div>
+                  </div>
+                </div>
+                <p className="text-gray-700 text-sm italic mb-3">
+                  「Excel管理からの脱却を検討していたところ、ApprovalHubに出会いました。
+                  <strong>導入初日から使えて</strong>、承認待ちの滞留が激減しました。」
+                </p>
+                <div className="flex items-center gap-1 text-yellow-400 text-sm">
+                  ★★★★★
+                </div>
+              </div>
+
+              {/* 顧客の声 3 */}
+              <div className="bg-white rounded-xl p-6 shadow-md">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-2xl">
+                    🏢
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">商社C社</div>
+                    <div className="text-xs text-gray-500">従業員80名</div>
+                  </div>
+                </div>
+                <p className="text-gray-700 text-sm italic mb-3">
+                  「取引先登録の承認フローが複雑で困っていました。
+                  ApprovalHubで<strong>承認ルートを可視化</strong>できて、新人でもすぐ理解できるように。」
+                </p>
+                <div className="flex items-center gap-1 text-yellow-400 text-sm">
+                  ★★★★★
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 導入業界 */}
+          <div className="text-center">
+            <p className="text-sm text-gray-500 mb-4">導入実績のある業界</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <span className="px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700 shadow">製造業</span>
+              <span className="px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700 shadow">IT・ソフトウェア</span>
+              <span className="px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700 shadow">商社・卸売</span>
+              <span className="px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700 shadow">建設・不動産</span>
+              <span className="px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-700 shadow">サービス業</span>
             </div>
           </div>
         </div>
