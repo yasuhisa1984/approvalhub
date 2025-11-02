@@ -193,38 +193,71 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 技術スタックセクション */}
-      <section className="py-20">
+      {/* 乗り換え簡単セクション */}
+      <section className="py-20 bg-gradient-to-br from-blue-50 to-indigo-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
-            技術スタック
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">フロントエンド</h3>
-              <div className="space-y-2">
-                <p className="text-gray-700">⚛️ React + TypeScript</p>
-                <p className="text-gray-700">🎨 Tailwind CSS</p>
-                <p className="text-gray-700">🚀 Vite</p>
-                <p className="text-gray-700">▲ Vercel (デプロイ)</p>
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              他のシステムからの乗り換えも簡単
+            </h2>
+            <p className="text-xl text-gray-600">
+              既存の承認システムから、スムーズに移行できます
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="bg-white p-8 rounded-xl shadow-lg">
+              <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                📄
               </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
+                CSVで一括インポート
+              </h3>
+              <p className="text-gray-600 text-center">
+                ユーザー情報や承認ルートを<br />
+                CSVファイルで一括登録。<br />
+                移行作業を数分で完了
+              </p>
             </div>
-            <div className="text-center">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">バックエンド</h3>
-              <div className="space-y-2">
-                <p className="text-gray-700">⚡ FastAPI (Python)</p>
-                <p className="text-gray-700">🔐 JWT認証</p>
-                <p className="text-gray-700">🔒 bcrypt暗号化</p>
-                <p className="text-gray-700">🎨 Render.com (デプロイ)</p>
+
+            <div className="bg-white p-8 rounded-xl shadow-lg">
+              <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                🔄
               </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
+                既存データを保持
+              </h3>
+              <p className="text-gray-600 text-center">
+                過去の承認履歴も<br />
+                そのまま移行可能。<br />
+                監査対応も安心
+              </p>
             </div>
-            <div className="text-center">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">データベース</h3>
-              <div className="space-y-2">
-                <p className="text-gray-700">🐘 PostgreSQL</p>
-                <p className="text-gray-700">🔐 Row Level Security</p>
-                <p className="text-gray-700">🚀 Supabase</p>
-                <p className="text-gray-700">🔄 Connection Pooling</p>
+
+            <div className="bg-white p-8 rounded-xl shadow-lg">
+              <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                🚀
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
+                即日稼働開始
+              </h3>
+              <p className="text-gray-600 text-center">
+                複雑な設定は不要。<br />
+                データ移行後、<br />
+                その日から運用開始可能
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <div className="inline-block bg-white px-6 py-4 rounded-lg shadow-md">
+              <p className="text-sm text-gray-600 mb-2">対応システム例</p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">ワークフローシステム</span>
+                <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">kintone</span>
+                <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">サイボウズ</span>
+                <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Excel管理</span>
+                <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">その他CSV対応システム</span>
               </div>
             </div>
           </div>
