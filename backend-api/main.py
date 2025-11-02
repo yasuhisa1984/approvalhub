@@ -28,16 +28,23 @@ app = FastAPI(
 )
 
 # CORS設定
+# Vercel と localhost からのリクエストを許可
+ALLOWED_ORIGINS = [
+    "https://approvalhub.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+print(f"[CORS] Allowed origins: {ALLOWED_ORIGINS}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        os.getenv("FRONTEND_URL", "http://localhost:5173"),
-        "https://approvalhub.vercel.app",
-        "http://localhost:5173"
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 # セキュリティ
