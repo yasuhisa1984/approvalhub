@@ -169,101 +169,6 @@ export default function ApprovalCreate() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Title */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            申請タイトル <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder={selectedTemplate ? "テンプレート選択時に自動入力されます" : "例: 新規取引先との業務委託契約"}
-            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
-            required
-          />
-          {selectedTemplate && (
-            <p className="text-xs text-gray-500 mt-2">
-              ※ テンプレート選択時は自動で入力されます（編集可能）
-            </p>
-          )}
-        </div>
-
-        {/* Description */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            申請内容 {!selectedTemplate && <span className="text-red-500">*</span>}
-            {selectedTemplate && <span className="text-gray-500">(任意)</span>}
-          </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder={selectedTemplate
-              ? "テンプレートの項目で入力した内容が申請内容となります。追加で記載したい内容があればここに入力してください。"
-              : "承認依頼の詳細を記入してください&#10;&#10;例:&#10;株式会社サンプルとの業務委託契約書の承認をお願いします。&#10;契約金額: 年間300万円&#10;契約期間: 2025年4月〜2026年3月"}
-            rows={selectedTemplate ? 4 : 8}
-            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-sm sm:text-base"
-            required={!selectedTemplate}
-          />
-          <p className="text-xs text-gray-500 mt-2">
-            {selectedTemplate
-              ? "※ テンプレート選択時は任意です"
-              : "承認者が判断しやすいよう、具体的に記載してください"}
-          </p>
-        </div>
-
-        {/* Route Selection */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
-          <label className="block text-sm font-semibold text-gray-900 mb-4">
-            承認ルート <span className="text-red-500">*</span>
-          </label>
-          {isLoadingRoutes ? (
-            <div className="text-center py-8 text-gray-500">
-              <Loader className="w-6 h-6 animate-spin mx-auto mb-2" />
-              <p className="text-sm">承認ルートを読み込み中...</p>
-            </div>
-          ) : routes.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p className="text-sm">承認ルートが見つかりません</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {routes.map((route) => (
-                <label
-                  key={route.id}
-                  className={`flex items-start gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                    selectedRoute === route.id
-                      ? 'border-primary-500 bg-primary-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="route"
-                    value={route.id}
-                    checked={selectedRoute === route.id}
-                    onChange={() => setSelectedRoute(route.id)}
-                    className="mt-1 w-4 h-4 text-primary-600"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-900">
-                        {route.name}
-                      </span>
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                        {route.step_count}段階承認
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {route.description}
-                    </p>
-                  </div>
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Form Template Selection */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
           <label className="block text-sm font-semibold text-gray-900 mb-4">
@@ -302,6 +207,26 @@ export default function ApprovalCreate() {
             >
               テンプレートをクリア
             </button>
+          )}
+        </div>
+
+        {/* Title */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            申請タイトル <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder={selectedTemplate ? "テンプレート選択時に自動入力されます" : "例: 新規取引先との業務委託契約"}
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
+            required
+          />
+          {selectedTemplate && (
+            <p className="text-xs text-gray-500 mt-2">
+              ※ テンプレート選択時は自動で入力されます（編集可能）
+            </p>
           )}
         </div>
 
@@ -424,6 +349,29 @@ export default function ApprovalCreate() {
           </div>
         )}
 
+        {/* Description */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            申請内容 {!selectedTemplate && <span className="text-red-500">*</span>}
+            {selectedTemplate && <span className="text-gray-500">(任意)</span>}
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder={selectedTemplate
+              ? "テンプレートの項目で入力した内容が申請内容となります。追加で記載したい内容があればここに入力してください。"
+              : "承認依頼の詳細を記入してください&#10;&#10;例:&#10;株式会社サンプルとの業務委託契約書の承認をお願いします。&#10;契約金額: 年間300万円&#10;契約期間: 2025年4月〜2026年3月"}
+            rows={selectedTemplate ? 4 : 8}
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-sm sm:text-base"
+            required={!selectedTemplate}
+          />
+          <p className="text-xs text-gray-500 mt-2">
+            {selectedTemplate
+              ? "※ テンプレート選択時は任意です"
+              : "承認者が判断しやすいよう、具体的に記載してください"}
+          </p>
+        </div>
+
         {/* File Upload */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
           <label className="block text-sm font-semibold text-gray-900 mb-4">
@@ -475,6 +423,58 @@ export default function ApprovalCreate() {
                     <X className="w-4 h-4 text-gray-500" />
                   </button>
                 </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Route Selection */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+          <label className="block text-sm font-semibold text-gray-900 mb-4">
+            承認ルート <span className="text-red-500">*</span>
+          </label>
+          {isLoadingRoutes ? (
+            <div className="text-center py-8 text-gray-500">
+              <Loader className="w-6 h-6 animate-spin mx-auto mb-2" />
+              <p className="text-sm">承認ルートを読み込み中...</p>
+            </div>
+          ) : routes.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p className="text-sm">承認ルートが見つかりません</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {routes.map((route) => (
+                <label
+                  key={route.id}
+                  className={`flex items-start gap-4 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                    selectedRoute === route.id
+                      ? 'border-primary-500 bg-primary-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="route"
+                    value={route.id}
+                    checked={selectedRoute === route.id}
+                    onChange={() => setSelectedRoute(route.id)}
+                    className="mt-1 w-4 h-4 text-primary-600"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-gray-900">
+                        {route.name}
+                      </span>
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                        {route.step_count}段階承認
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {route.description}
+                    </p>
+                  </div>
+                </label>
               ))}
             </div>
           )}
