@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApprovalHub Debug</title>
+</head>
+<body>
+    <h1>ApprovalHub デバッグ情報</h1>
+    <div id="info"></div>
+
+    <script>
+        // LocalStorageの情報を表示
+        const token = localStorage.getItem('jwt_token');
+        const user = localStorage.getItem('user');
+
+        const infoDiv = document.getElementById('info');
+        infoDiv.innerHTML = `
+            <h2>JWT Token:</h2>
+            <pre>${token || '(なし)'}</pre>
+
+            <h2>User Info:</h2>
+            <pre>${user || '(なし)'}</pre>
+
+            <h2>環境変数:</h2>
+            <pre>現在のURL: ${window.location.href}</pre>
+        `;
+
+        // APIテスト
+        if (token) {
+            fetch('https://approvalhub-backend.onrender.com/api/approvals', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                infoDiv.innerHTML += `
+                    <h2>API Response:</h2>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            })
+            .catch(err => {
+                infoDiv.innerHTML += `
+                    <h2>API Error:</h2>
+                    <pre>${err.message}</pre>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
