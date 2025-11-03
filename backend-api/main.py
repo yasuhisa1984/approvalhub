@@ -193,6 +193,11 @@ def read_root():
         "docs": "/docs"
     }
 
+@app.get("/health")
+def health_check():
+    """ヘルスチェックエンドポイント（Render用）"""
+    return {"status": "healthy", "version": "1.0.0"}
+
 @app.post("/api/auth/login", response_model=LoginResponse)
 def login(request: LoginRequest, conn=Depends(get_db)):
     """ログイン"""
