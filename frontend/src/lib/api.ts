@@ -163,6 +163,16 @@ export const approvalApi = {
   },
 
   /**
+   * 自分の申請一覧取得
+   */
+  getMyApprovals: async (params?: { status?: string }) => {
+    const response = await api.get('/api/approvals', {
+      params: { ...params, my: true }
+    });
+    return response.data;
+  },
+
+  /**
    * 承認詳細取得
    */
   getApprovalById: async (id: number) => {

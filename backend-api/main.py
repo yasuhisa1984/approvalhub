@@ -311,11 +311,17 @@ def signup(request: SignupRequest, conn=Depends(get_db)):
 @app.get("/api/approvals", response_model=List[dict])
 def get_approvals(
     status: Optional[str] = None,
+    my: Optional[bool] = False,
     payload: dict = Depends(verify_token),
     conn = Depends(get_db)
 ):
-    """承認一覧取得"""
-    print(f"[DEBUG] get_approvals called - tenant_id: {payload.get('tenant_id')}, user_id: {payload.get('user_id')}")
+    """承認一覧取得
+
+    Args:
+        status: ステータスでフィルタ（pending/approved/rejected/withdrawn）
+        my: Trueの場合、自分が作成した申請のみ取得
+    """
+    print(f"[DEBUG] get_approvals called - tenant_id: {payload.get('tenant_id')}, user_id: {payload.get('user_id')}, my={my}")
 
     cursor = conn.cursor()
 
@@ -340,6 +346,12 @@ def get_approvals(
         WHERE a.tenant_id = %s
     """
     params = [tenant_id]
+
+    # 自分の申請のみフィルタ
+    if my:
+        query += " AND a.applicant_id = %s"
+        params.append(user_id)
+        print(f"[DEBUG] Filtering by applicant_id: {user_id}")
 
     if status:
         query += " AND a.status = %s"

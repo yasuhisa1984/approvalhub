@@ -17,8 +17,8 @@ export default function MyApprovals() {
         setIsLoading(true)
         setError(null)
 
-        // 全申請を取得（バックエンドはユーザーのトークンから自動的に申請者でフィルタ）
-        const response = await approvalApi.getApprovals()
+        // 自分の申請のみを取得（my=true パラメータを追加）
+        const response = await approvalApi.getMyApprovals()
         setMyApprovals(response || [])
       } catch (err) {
         console.error('Failed to fetch my approvals:', err)
