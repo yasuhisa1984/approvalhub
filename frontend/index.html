@@ -5,6 +5,30 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ApprovalHub - 10秒で完結する承認システム</title>
+
+    <!-- Basic Authentication -->
+    <script>
+      (function() {
+        // ベーシック認証チェック
+        const AUTH_KEY = 'basic_auth_verified';
+        const CORRECT_PASSWORD = 'hoge';
+
+        // すでに認証済みかチェック
+        if (sessionStorage.getItem(AUTH_KEY) === 'true') {
+          return; // 認証済み
+        }
+
+        // パスワードプロンプト
+        const password = prompt('このサイトはデモ版です。パスワードを入力してください:');
+
+        if (password === CORRECT_PASSWORD) {
+          sessionStorage.setItem(AUTH_KEY, 'true');
+        } else {
+          alert('パスワードが正しくありません');
+          window.location.href = 'about:blank';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
