@@ -377,15 +377,43 @@ export const fileApi = {
   /**
    * ファイルアップロード
    */
-  upload: async (file: File) => {
+  upload: async (file: File, approval_id?: number) => {
     const formData = new FormData();
     formData.append('file', file);
+    if (approval_id) {
+      formData.append('approval_id', approval_id.toString());
+    }
 
     const response = await api.post('/api/files/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
+    return response.data;
+  },
+
+  /**
+   * ファイル情報取得
+   */
+  getFile: async (file_id: number) => {
+    const response = await api.get(`/api/files/${file_id}`);
+    return response.data;
+  },
+
+  /**
+   * ファイル削除
+   */
+  deleteFile: async (file_id: number) => {
+    const response = await api.delete(`/api/files/${file_id}`);
+    return response.data;
+  },
+
+  /**
+   * ファイル一覧取得
+   */
+  getFiles: async (approval_id?: number) => {
+    const params = approval_id ? { approval_id } : {};
+    const response = await api.get('/api/files', { params });
     return response.data;
   },
 };

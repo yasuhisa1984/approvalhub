@@ -2,7 +2,7 @@
 ApprovalHub FastAPI Backend
 シンプルで高速なREST API
 """
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
@@ -10,6 +10,7 @@ from typing import Optional, List
 from datetime import datetime, timedelta
 import os
 import json
+import uuid
 from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -17,6 +18,8 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from urllib.parse import urlparse
 import socket
+import boto3
+from botocore.exceptions import ClientError
 
 # 環境変数読み込み
 load_dotenv()
@@ -56,6 +59,24 @@ security = HTTPBearer()
 JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
+
+# Cloudflare R2設定
+R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID")
+R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID")
+R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY")
+R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME", "approvalhub-files")
+MAX_FILE_SIZE_MB = int(os.getenv("MAX_FILE_SIZE_MB", "10"))
+
+# Cloudflare R2クライアント初期化
+r2_client = None
+if R2_ACCOUNT_ID and R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY:
+    r2_client = boto3.client(
+        's3',
+        endpoint_url=f'https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com',
+        aws_access_key_id=R2_ACCESS_KEY_ID,
+        aws_secret_access_key=R2_SECRET_ACCESS_KEY,
+        region_name='auto'
+    )
 
 # データベース接続（IPv4を強制）
 def get_db():
@@ -1878,6 +1899,275 @@ def get_webhook_logs(
             "createdAt": log["created_at"].isoformat() if log["created_at"] else None,
         }
         for log in logs
+    ]
+
+# ========================================
+# ファイルAPI (Cloudflare R2)
+# ========================================
+
+@app.post("/api/files/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    approval_id: Optional[int] = None,
+    payload: dict = Depends(verify_token),
+    conn = Depends(get_db)
+):
+    """ファイルアップロード"""
+
+    if not r2_client:
+        raise HTTPException(status_code=500, detail="File storage is not configured")
+
+    cursor = conn.cursor()
+    tenant_id = payload.get("tenant_id")
+    user_id = payload.get("user_id")
+    cursor.execute("SET app.current_tenant_id = %s", (tenant_id,))
+
+    # ファイルサイズチェック
+    file_content = await file.read()
+    file_size = len(file_content)
+    max_size_bytes = MAX_FILE_SIZE_MB * 1024 * 1024
+
+    if file_size > max_size_bytes:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File size exceeds maximum limit of {MAX_FILE_SIZE_MB}MB"
+        )
+
+    # ファイル名とMIMEタイプ
+    original_filename = file.filename
+    mime_type = file.content_type or "application/octet-stream"
+
+    # ユニークなファイルID生成
+    file_uuid = str(uuid.uuid4())
+    file_extension = original_filename.split(".")[-1] if "." in original_filename else ""
+    storage_filename = f"{file_uuid}.{file_extension}" if file_extension else file_uuid
+    storage_path = f"{tenant_id}/{storage_filename}"
+
+    try:
+        # Cloudflare R2にアップロード
+        r2_client.put_object(
+            Bucket=R2_BUCKET_NAME,
+            Key=storage_path,
+            Body=file_content,
+            ContentType=mime_type
+        )
+
+        # データベースにメタデータ保存
+        cursor.execute(
+            """
+            INSERT INTO files (
+                tenant_id, uploader_id, file_name, file_size, mime_type,
+                storage_path, approval_id, created_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
+            RETURNING id, file_name, file_size, mime_type, storage_path, created_at
+            """,
+            (tenant_id, user_id, original_filename, file_size, mime_type, storage_path, approval_id)
+        )
+
+        file_record = cursor.fetchone()
+        conn.commit()
+
+        return {
+            "id": file_record["id"],
+            "fileName": file_record["file_name"],
+            "fileSize": file_record["file_size"],
+            "mimeType": file_record["mime_type"],
+            "storagePath": file_record["storage_path"],
+            "createdAt": file_record["created_at"].isoformat(),
+        }
+
+    except ClientError as e:
+        conn.rollback()
+        # アップロード失敗時はR2からも削除を試みる
+        try:
+            r2_client.delete_object(Bucket=R2_BUCKET_NAME, Key=storage_path)
+        except:
+            pass
+        raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
+
+
+@app.get("/api/files/{file_id}")
+def get_file(
+    file_id: int,
+    payload: dict = Depends(verify_token),
+    conn = Depends(get_db)
+):
+    """ファイル情報取得・ダウンロードURL生成"""
+
+    if not r2_client:
+        raise HTTPException(status_code=500, detail="File storage is not configured")
+
+    cursor = conn.cursor()
+    tenant_id = payload.get("tenant_id")
+    cursor.execute("SET app.current_tenant_id = %s", (tenant_id,))
+
+    # ファイル情報取得
+    cursor.execute(
+        """
+        SELECT id, file_name, file_size, mime_type, storage_path, approval_id, created_at
+        FROM files
+        WHERE id = %s AND tenant_id = %s AND deleted_at IS NULL
+        """,
+        (file_id, tenant_id)
+    )
+
+    file_record = cursor.fetchone()
+
+    if not file_record:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    try:
+        # 署名付きURL生成（1時間有効）
+        download_url = r2_client.generate_presigned_url(
+            'get_object',
+            Params={
+                'Bucket': R2_BUCKET_NAME,
+                'Key': file_record["storage_path"]
+            },
+            ExpiresIn=3600  # 1時間
+        )
+
+        return {
+            "id": file_record["id"],
+            "fileName": file_record["file_name"],
+            "fileSize": file_record["file_size"],
+            "mimeType": file_record["mime_type"],
+            "approvalId": file_record["approval_id"],
+            "createdAt": file_record["created_at"].isoformat(),
+            "downloadUrl": download_url,
+        }
+
+    except ClientError as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate download URL: {str(e)}")
+
+
+@app.delete("/api/files/{file_id}")
+def delete_file(
+    file_id: int,
+    payload: dict = Depends(verify_token),
+    conn = Depends(get_db)
+):
+    """ファイル削除"""
+
+    if not r2_client:
+        raise HTTPException(status_code=500, detail="File storage is not configured")
+
+    cursor = conn.cursor()
+    tenant_id = payload.get("tenant_id")
+    user_id = payload.get("user_id")
+    cursor.execute("SET app.current_tenant_id = %s", (tenant_id,))
+
+    # ファイル情報取得
+    cursor.execute(
+        """
+        SELECT id, storage_path, uploader_id
+        FROM files
+        WHERE id = %s AND tenant_id = %s AND deleted_at IS NULL
+        """,
+        (file_id, tenant_id)
+    )
+
+    file_record = cursor.fetchone()
+
+    if not file_record:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # 権限チェック（アップロード者または管理者のみ削除可能）
+    cursor.execute(
+        "SELECT role FROM users WHERE id = %s",
+        (user_id,)
+    )
+    user = cursor.fetchone()
+
+    if file_record["uploader_id"] != user_id and user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="You don't have permission to delete this file")
+
+    try:
+        # Cloudflare R2から削除
+        r2_client.delete_object(
+            Bucket=R2_BUCKET_NAME,
+            Key=file_record["storage_path"]
+        )
+
+        # データベースでソフトデリート
+        cursor.execute(
+            """
+            UPDATE files
+            SET deleted_at = NOW()
+            WHERE id = %s
+            """,
+            (file_id,)
+        )
+
+        conn.commit()
+
+        return {"message": "File deleted successfully"}
+
+    except ClientError as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete file: {str(e)}")
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete file: {str(e)}")
+
+
+@app.get("/api/files")
+def get_files(
+    approval_id: Optional[int] = None,
+    payload: dict = Depends(verify_token),
+    conn = Depends(get_db)
+):
+    """ファイル一覧取得"""
+
+    cursor = conn.cursor()
+    tenant_id = payload.get("tenant_id")
+    cursor.execute("SET app.current_tenant_id = %s", (tenant_id,))
+
+    if approval_id:
+        # 特定の承認申請のファイル一覧
+        cursor.execute(
+            """
+            SELECT f.id, f.file_name, f.file_size, f.mime_type, f.created_at,
+                   u.name as uploader_name
+            FROM files f
+            JOIN users u ON f.uploader_id = u.id
+            WHERE f.approval_id = %s AND f.tenant_id = %s AND f.deleted_at IS NULL
+            ORDER BY f.created_at DESC
+            """,
+            (approval_id, tenant_id)
+        )
+    else:
+        # 全ファイル一覧
+        cursor.execute(
+            """
+            SELECT f.id, f.file_name, f.file_size, f.mime_type, f.created_at,
+                   u.name as uploader_name, f.approval_id
+            FROM files f
+            JOIN users u ON f.uploader_id = u.id
+            WHERE f.tenant_id = %s AND f.deleted_at IS NULL
+            ORDER BY f.created_at DESC
+            LIMIT 100
+            """,
+            (tenant_id,)
+        )
+
+    files = cursor.fetchall()
+
+    return [
+        {
+            "id": f["id"],
+            "fileName": f["file_name"],
+            "fileSize": f["file_size"],
+            "mimeType": f["mime_type"],
+            "uploaderName": f["uploader_name"],
+            "approvalId": f.get("approval_id"),
+            "createdAt": f["created_at"].isoformat(),
+        }
+        for f in files
     ]
 
 if __name__ == "__main__":
