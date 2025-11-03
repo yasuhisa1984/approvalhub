@@ -1,8 +1,10 @@
 import { ReactNode, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { CheckCircle2, Home, Settings, Users, LogOut, Bell, Plus, FileText, Layout as LayoutIcon, Shield, Building2, ArrowLeft, Code, Menu, X } from 'lucide-react'
+import { CheckCircle2, Home, Settings, Users, LogOut, Bell, Plus, FileText, Layout as LayoutIcon, Shield, Building2, ArrowLeft, Code, Menu, X, BarChart3, Webhook, UserPlus } from 'lucide-react'
 import { useImpersonation } from '../contexts/ImpersonationContext'
 import { useAuth } from '../contexts/AuthContext'
+import { useNotifications } from '../contexts/NotificationContext'
+import NotificationToast from './NotificationToast'
 
 interface LayoutProps {
   children: ReactNode
@@ -12,6 +14,7 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation()
   const { impersonatedTenant, exitImpersonation, isImpersonating } = useImpersonation()
   const { user, logout } = useAuth()
+  const { unreadCount } = useNotifications()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const isActive = (path: string) => {
@@ -91,7 +94,11 @@ export default function Layout({ children }: LayoutProps) {
               {/* Notification Bell */}
               <Link to="/notifications" className="relative p-2 hover:bg-gray-100 rounded-lg">
                 <Bell className="w-5 h-5 text-gray-600" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </Link>
 
               {/* User Menu */}
@@ -183,6 +190,18 @@ export default function Layout({ children }: LayoutProps) {
               チーム管理
             </Link>
             <Link
+              to="/reports"
+              onClick={closeSidebar}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
+                isActive('/reports')
+                  ? 'bg-primary-50 text-primary-700 font-medium'
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <BarChart3 className="w-5 h-5" />
+              レポート
+            </Link>
+            <Link
               to="/admin"
               onClick={closeSidebar}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
@@ -237,6 +256,42 @@ export default function Layout({ children }: LayoutProps) {
                 <LayoutIcon className="w-5 h-5" />
                 フォームテンプレート
               </Link>
+              <Link
+                to="/settings/webhooks"
+                onClick={closeSidebar}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
+                  isActive('/settings/webhooks')
+                    ? 'bg-primary-50 text-primary-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Webhook className="w-5 h-5" />
+                Webhook連携
+              </Link>
+              <Link
+                to="/settings/reminders"
+                onClick={closeSidebar}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
+                  isActive('/settings/reminders')
+                    ? 'bg-primary-50 text-primary-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Bell className="w-5 h-5" />
+                リマインダー
+              </Link>
+              <Link
+                to="/settings/delegation"
+                onClick={closeSidebar}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
+                  isActive('/settings/delegation')
+                    ? 'bg-primary-50 text-primary-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <UserPlus className="w-5 h-5" />
+                代理承認設定
+              </Link>
             </div>
             <div className="pt-2 mt-2 border-t border-gray-200">
               <p className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">開発者</p>
@@ -275,6 +330,9 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </main>
       </div>
+
+      {/* Notification Toast */}
+      <NotificationToast />
     </div>
   )
 }

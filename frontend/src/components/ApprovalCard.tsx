@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Clock, User, ArrowRight } from 'lucide-react'
+import { Clock, User, ArrowRight, AlertCircle } from 'lucide-react'
 import { Approval } from '../types'
 
 interface ApprovalCardProps {
@@ -7,10 +7,16 @@ interface ApprovalCardProps {
 }
 
 export default function ApprovalCard({ approval }: ApprovalCardProps) {
+  const isOverdue = approval.deadline && new Date(approval.deadline) < new Date() && approval.status === 'pending'
+  const isNearDeadline = approval.deadline && !isOverdue && approval.status === 'pending' &&
+    (new Date(approval.deadline).getTime() - new Date().getTime()) < 24 * 60 * 60 * 1000 // 24時間以内
+
   return (
     <Link
       to={`/approvals/${approval.id}`}
-      className="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
+      className={`block bg-white rounded-lg border p-6 hover:shadow-md transition-shadow cursor-pointer ${
+        isOverdue ? 'border-red-300 bg-red-50/30' : isNearDeadline ? 'border-yellow-300 bg-yellow-50/30' : 'border-gray-200'
+      }`}
     >
       <div className="mb-4">
         <div className="flex items-start justify-between mb-2">
@@ -51,6 +57,40 @@ export default function ApprovalCard({ approval }: ApprovalCardProps) {
           <ArrowRight className="w-4 h-4 text-primary-600" />
         </div>
       </div>
+
+      {/* Deadline Warning */}
+      {approval.deadline && approval.status === 'pending' && (
+        <div className={`mt-4 p-3 rounded-lg border ${
+          isOverdue
+            ? 'bg-red-50 border-red-200'
+            : isNearDeadline
+            ? 'bg-yellow-50 border-yellow-200'
+            : 'bg-blue-50 border-blue-200'
+        }`}>
+          <div className="flex items-center gap-2">
+            {isOverdue ? (
+              <AlertCircle className="w-4 h-4 text-red-600" />
+            ) : isNearDeadline ? (
+              <Clock className="w-4 h-4 text-yellow-600" />
+            ) : (
+              <Clock className="w-4 h-4 text-blue-600" />
+            )}
+            <div className="flex-1">
+              <p className={`text-xs font-semibold ${
+                isOverdue ? 'text-red-900' : isNearDeadline ? 'text-yellow-900' : 'text-blue-900'
+              }`}>
+                {isOverdue ? '期限超過' : isNearDeadline ? '期限間近' : '承認期限'}
+              </p>
+              <p className={`text-xs ${
+                isOverdue ? 'text-red-700' : isNearDeadline ? 'text-yellow-700' : 'text-blue-700'
+              }`}>
+                {formatDate(approval.deadline)}
+                {isOverdue && ' - エスカレーション対象'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {approval.current_approver && (
         <div className="mt-4 pt-4 border-t border-gray-200">

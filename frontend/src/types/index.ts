@@ -18,6 +18,9 @@ export interface Approval {
   route_name: string
   created_at: string
   updated_at: string
+  deadline?: string // 承認期限（ISO形式）
+  reminder_sent?: boolean // リマインダー送信済みフラグ
+  last_reminder_at?: string // 最後のリマインダー送信時刻
 }
 
 export interface ApprovalHistory {

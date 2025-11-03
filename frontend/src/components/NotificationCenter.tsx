@@ -11,16 +11,16 @@ import {
   Clock,
 } from 'lucide-react'
 import {
-  mockNotifications,
   mockNotificationSettings,
   notificationTypeLabels,
   notificationTypeIcons,
   notificationTypeColors,
 } from '../data/notificationData'
 import { NotificationType, NotificationSettings } from '../types/notification'
+import { useNotifications } from '../contexts/NotificationContext'
 
 export default function NotificationCenter() {
-  const [notifications, setNotifications] = useState(mockNotifications)
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications()
   const [filterType, setFilterType] = useState<NotificationType | 'all'>('all')
   const [filterRead, setFilterRead] = useState<'all' | 'unread' | 'read'>('all')
   const [showSettings, setShowSettings] = useState(false)
@@ -35,18 +35,12 @@ export default function NotificationCenter() {
     return matchesType && matchesRead
   })
 
-  const unreadCount = notifications.filter((n) => !n.read).length
-
   const handleMarkAsRead = (id: number) => {
-    setNotifications(notifications.map((n) => (n.id === id ? { ...n, read: true } : n)))
-  }
-
-  const handleMarkAllAsRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, read: true })))
+    markAsRead(id)
   }
 
   const handleDelete = (id: number) => {
-    setNotifications(notifications.filter((n) => n.id !== id))
+    deleteNotification(id)
   }
 
   const handleSettingsUpdate = (newSettings: NotificationSettings) => {
@@ -85,7 +79,7 @@ export default function NotificationCenter() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={handleMarkAllAsRead}
+            onClick={markAllAsRead}
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-gray-700"
           >
             <CheckCircle className="w-4 h-4" />

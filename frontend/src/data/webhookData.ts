@@ -1,0 +1,137 @@
+import { Webhook, WebhookLog } from '../types/webhook'
+
+export const mockWebhooks: Webhook[] = [
+  {
+    id: 1,
+    name: 'Slack - 営業部チャンネル',
+    url: 'https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX',
+    events: ['approval_request_created', 'approval_request_approved', 'approval_request_rejected'],
+    isActive: true,
+    createdAt: '2024-01-15',
+    lastTriggeredAt: '2024-01-20 14:30:00',
+    secret: 'slack_secret_key_123',
+  },
+  {
+    id: 2,
+    name: 'Teams - 経理部',
+    url: 'https://outlook.office.com/webhook/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+    events: ['approval_request_completed'],
+    isActive: true,
+    createdAt: '2024-01-10',
+    lastTriggeredAt: '2024-01-19 10:15:00',
+  },
+  {
+    id: 3,
+    name: 'カスタムAPI - 社内システム連携',
+    url: 'https://api.example.com/approval-webhook',
+    events: [
+      'approval_request_created',
+      'approval_request_approved',
+      'approval_request_rejected',
+      'approval_request_commented',
+      'approval_request_completed',
+      'approval_request_cancelled',
+    ],
+    isActive: false,
+    createdAt: '2024-01-05',
+    lastTriggeredAt: '2024-01-18 16:45:00',
+    secret: 'custom_api_secret_456',
+  },
+]
+
+export const mockWebhookLogs: WebhookLog[] = [
+  {
+    id: 1,
+    webhookId: 1,
+    webhookName: 'Slack - 営業部チャンネル',
+    event: 'approval_request_created',
+    status: 'success',
+    statusCode: 200,
+    requestBody: {
+      event: 'approval_request_created',
+      data: {
+        id: 123,
+        title: '出張申請（大阪）',
+        requester: '田中太郎',
+        amount: 50000,
+      },
+    },
+    responseBody: { ok: true },
+    triggeredAt: '2024-01-20 14:30:00',
+    duration: 245,
+  },
+  {
+    id: 2,
+    webhookId: 1,
+    webhookName: 'Slack - 営業部チャンネル',
+    event: 'approval_request_approved',
+    status: 'success',
+    statusCode: 200,
+    requestBody: {
+      event: 'approval_request_approved',
+      data: {
+        id: 122,
+        title: '備品購入申請',
+        approver: '山田花子',
+      },
+    },
+    responseBody: { ok: true },
+    triggeredAt: '2024-01-20 13:15:00',
+    duration: 198,
+  },
+  {
+    id: 3,
+    webhookId: 2,
+    webhookName: 'Teams - 経理部',
+    event: 'approval_request_completed',
+    status: 'success',
+    statusCode: 200,
+    requestBody: {
+      event: 'approval_request_completed',
+      data: {
+        id: 120,
+        title: '経費精算（12月分）',
+        finalAmount: 35000,
+      },
+    },
+    triggeredAt: '2024-01-19 10:15:00',
+    duration: 512,
+  },
+  {
+    id: 4,
+    webhookId: 1,
+    webhookName: 'Slack - 営業部チャンネル',
+    event: 'approval_request_rejected',
+    status: 'failure',
+    statusCode: 500,
+    requestBody: {
+      event: 'approval_request_rejected',
+      data: {
+        id: 118,
+        title: '設備投資申請',
+        rejector: '佐藤次郎',
+      },
+    },
+    error: 'Internal Server Error',
+    triggeredAt: '2024-01-18 16:00:00',
+    duration: 5000,
+  },
+  {
+    id: 5,
+    webhookId: 3,
+    webhookName: 'カスタムAPI - 社内システム連携',
+    event: 'approval_request_created',
+    status: 'failure',
+    statusCode: 404,
+    requestBody: {
+      event: 'approval_request_created',
+      data: {
+        id: 115,
+        title: '契約書承認',
+      },
+    },
+    error: 'Endpoint not found',
+    triggeredAt: '2024-01-18 16:45:00',
+    duration: 1200,
+  },
+]

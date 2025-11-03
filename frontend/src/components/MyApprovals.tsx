@@ -1,14 +1,35 @@
-import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, Loader } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { mockApprovals } from '../data/mockData'
+import { approvalApi } from '../lib/api'
 import ApprovalCard from './ApprovalCard'
 
 export default function MyApprovals() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
+  const [myApprovals, setMyApprovals] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // 自分が申請したものをフィルタ（申請者ID=3の佐藤一般の視点）
-  const myApprovals = mockApprovals.filter((approval) => approval.applicant.id === 3)
+  // データ取得
+  useEffect(() => {
+    const fetchApprovals = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        // 全申請を取得（バックエンドはユーザーのトークンから自動的に申請者でフィルタ）
+        const response = await approvalApi.getApprovals()
+        setMyApprovals(response || [])
+      } catch (err) {
+        console.error('Failed to fetch my approvals:', err)
+        setError('申請の取得に失敗しました')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchApprovals()
+  }, [])
 
   const filteredApprovals = myApprovals.filter((approval) => {
     if (filter === 'all') return true
@@ -20,6 +41,33 @@ export default function MyApprovals() {
     pending: myApprovals.filter((a) => a.status === 'pending').length,
     approved: myApprovals.filter((a) => a.status === 'approved').length,
     rejected: myApprovals.filter((a) => a.status === 'rejected').length,
+  }
+
+  // ローディング中
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader className="w-8 h-8 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // エラー表示
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <p className="text-red-800">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+        >
+          再読み込み
+        </button>
+      </div>
+    )
   }
 
   return (

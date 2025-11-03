@@ -123,6 +123,14 @@ export const authApi = {
   },
 
   /**
+   * サインアップ
+   */
+  signup: async (data: { name: string; email: string; password: string; tenant_slug?: string }) => {
+    const response = await api.post('/api/auth/signup', data);
+    return response.data;
+  },
+
+  /**
    * ログアウト
    */
   logout: async () => {
@@ -200,6 +208,63 @@ export const approvalApi = {
     const response = await api.post(`/api/approvals/${id}/reject`, { comment });
     return response.data;
   },
+
+  /**
+   * 承認取り下げ
+   */
+  withdraw: async (id: number, comment?: string) => {
+    const response = await api.post(`/api/approvals/${id}/withdraw`, { comment });
+    return response.data;
+  },
+
+  /**
+   * 承認ルート作成
+   */
+  createRoute: async (data: {
+    name: string;
+    description?: string;
+    is_active?: boolean;
+    steps: Array<{
+      step_order: number;
+      approver_id: number;
+      is_required?: boolean;
+      is_parallel_group?: boolean;
+      parallel_requirement?: 'all' | 'any';
+    }>;
+  }) => {
+    const response = await api.post('/api/approval-routes', data);
+    return response.data;
+  },
+
+  /**
+   * 承認ルート更新
+   */
+  updateRoute: async (
+    id: number,
+    data: {
+      name?: string;
+      description?: string;
+      is_active?: boolean;
+      steps?: Array<{
+        step_order: number;
+        approver_id: number;
+        is_required?: boolean;
+        is_parallel_group?: boolean;
+        parallel_requirement?: 'all' | 'any';
+      }>;
+    }
+  ) => {
+    const response = await api.put(`/api/approval-routes/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * 承認ルート削除
+   */
+  deleteRoute: async (id: number) => {
+    const response = await api.delete(`/api/approval-routes/${id}`);
+    return response.data;
+  },
 };
 
 /**
@@ -211,6 +276,33 @@ export const userApi = {
    */
   getUsers: async () => {
     const response = await api.get('/api/users');
+    return response.data;
+  },
+
+  /**
+   * ユーザー作成
+   */
+  createUser: async (data: { name: string; email: string; password: string; role?: string }) => {
+    const response = await api.post('/api/users', data);
+    return response.data;
+  },
+
+  /**
+   * ユーザー更新
+   */
+  updateUser: async (
+    id: number,
+    data: { name?: string; email?: string; password?: string; role?: string }
+  ) => {
+    const response = await api.put(`/api/users/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * ユーザー削除
+   */
+  deleteUser: async (id: number) => {
+    const response = await api.delete(`/api/users/${id}`);
     return response.data;
   },
 
@@ -245,6 +337,40 @@ export const notificationApi = {
 };
 
 /**
+ * 代理承認API
+ */
+export const delegationApi = {
+  /**
+   * 代理承認設定一覧取得
+   */
+  getDelegations: async () => {
+    const response = await api.get('/api/delegations');
+    return response.data;
+  },
+
+  /**
+   * 代理承認設定作成
+   */
+  createDelegation: async (data: {
+    delegate_user_id: number;
+    start_date: string;
+    end_date: string;
+    reason: string;
+  }) => {
+    const response = await api.post('/api/delegations', data);
+    return response.data;
+  },
+
+  /**
+   * 代理承認設定削除
+   */
+  deleteDelegation: async (id: number) => {
+    const response = await api.delete(`/api/delegations/${id}`);
+    return response.data;
+  },
+};
+
+/**
  * ファイルAPI
  */
 export const fileApi = {
@@ -260,6 +386,141 @@ export const fileApi = {
         'Content-Type': 'multipart/form-data',
       },
     });
+    return response.data;
+  },
+};
+
+/**
+ * フォームテンプレートAPI
+ */
+export const formTemplateApi = {
+  /**
+   * フォームテンプレート一覧取得
+   */
+  getTemplates: async () => {
+    const response = await api.get('/api/form-templates');
+    return response.data;
+  },
+
+  /**
+   * フォームテンプレート作成
+   */
+  createTemplate: async (data: {
+    name: string;
+    description?: string;
+    icon?: string;
+    is_active?: boolean;
+    fields: any[];
+  }) => {
+    const response = await api.post('/api/form-templates', data);
+    return response.data;
+  },
+
+  /**
+   * フォームテンプレート更新
+   */
+  updateTemplate: async (id: number, data: {
+    name: string;
+    description?: string;
+    icon?: string;
+    is_active?: boolean;
+    fields: any[];
+  }) => {
+    const response = await api.put(`/api/form-templates/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * フォームテンプレート削除
+   */
+  deleteTemplate: async (id: number) => {
+    const response = await api.delete(`/api/form-templates/${id}`);
+    return response.data;
+  },
+};
+
+/**
+ * レポートAPI
+ */
+export const reportsApi = {
+  /**
+   * 統計情報取得
+   */
+  getStats: async () => {
+    const response = await api.get('/api/reports/stats');
+    return response.data;
+  },
+
+  /**
+   * 月別データ取得
+   */
+  getMonthlyData: async () => {
+    const response = await api.get('/api/reports/monthly');
+    return response.data;
+  },
+
+  /**
+   * 部署別データ取得
+   */
+  getDepartmentData: async () => {
+    const response = await api.get('/api/reports/departments');
+    return response.data;
+  },
+};
+
+/**
+ * WebhookAPI
+ */
+export const webhookApi = {
+  /**
+   * Webhook一覧取得
+   */
+  getWebhooks: async () => {
+    const response = await api.get('/api/webhooks');
+    return response.data;
+  },
+
+  /**
+   * Webhook作成
+   */
+  createWebhook: async (data: {
+    name: string;
+    url: string;
+    events: string[];
+    is_active?: boolean;
+    secret?: string;
+  }) => {
+    const response = await api.post('/api/webhooks', data);
+    return response.data;
+  },
+
+  /**
+   * Webhook更新
+   */
+  updateWebhook: async (id: number, data: {
+    name: string;
+    url: string;
+    events: string[];
+    is_active?: boolean;
+    secret?: string;
+  }) => {
+    const response = await api.put(`/api/webhooks/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * Webhook削除
+   */
+  deleteWebhook: async (id: number) => {
+    const response = await api.delete(`/api/webhooks/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Webhookログ取得
+   */
+  getWebhookLogs: async (id: number) => {
+    const response = await api.get(`/api/webhooks/${id}/logs`);
     return response.data;
   },
 };

@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { ArrowLeft, CheckCircle } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Loader } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { mockFormTemplates } from '../data/formTemplates'
 import { FormTemplate, FormData } from '../types/form'
+import { approvalApi } from '../lib/api'
 import DynamicForm from './DynamicForm'
 
 export default function ApprovalCreateWithTemplate() {
@@ -10,10 +11,26 @@ export default function ApprovalCreateWithTemplate() {
   const [selectedRouteId, setSelectedRouteId] = useState<number | null>(null)
   const [formData, setFormData] = useState<FormData>({})
   const [showSuccess, setShowSuccess] = useState(false)
+  const [routes, setRoutes] = useState<any[]>([])
+  const [isLoadingRoutes, setIsLoadingRoutes] = useState(false)
+  const [routesError, setRoutesError] = useState<string | null>(null)
 
-  const handleTemplateSelect = (template: FormTemplate) => {
+  const handleTemplateSelect = async (template: FormTemplate) => {
     setSelectedTemplate(template)
     setFormData({})
+
+    // 承認ルートを取得
+    try {
+      setIsLoadingRoutes(true)
+      setRoutesError(null)
+      const routesResponse = await approvalApi.getApprovalRoutes()
+      setRoutes(routesResponse || [])
+    } catch (err) {
+      console.error('Failed to fetch routes:', err)
+      setRoutesError('承認ルートの取得に失敗しました')
+    } finally {
+      setIsLoadingRoutes(false)
+    }
   }
 
   const handleSubmit = (data: FormData) => {
@@ -31,13 +48,6 @@ export default function ApprovalCreateWithTemplate() {
       setFormData({})
     }, 2000)
   }
-
-  const mockRoutes = [
-    { id: 1, name: '契約書承認フロー', steps: 2 },
-    { id: 2, name: '経費申請フロー', steps: 3 },
-    { id: 3, name: '人事施策承認フロー', steps: 3 },
-    { id: 4, name: '簡易承認フロー', steps: 1 },
-  ]
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -129,33 +139,48 @@ export default function ApprovalCreateWithTemplate() {
             <label className="block text-sm font-semibold text-gray-900 mb-3">
               承認ルート <span className="text-red-500">*</span>
             </label>
-            <div className="space-y-2">
-              {mockRoutes.map((route) => (
-                <label
-                  key={route.id}
-                  className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-colors ${
-                    selectedRouteId === route.id
-                      ? 'border-primary-500 bg-primary-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="route"
-                    value={route.id}
-                    checked={selectedRouteId === route.id}
-                    onChange={() => setSelectedRouteId(route.id)}
-                    className="w-4 h-4 text-primary-600"
-                  />
-                  <div className="flex-1">
-                    <span className="font-medium text-gray-900">{route.name}</span>
-                    <span className="text-xs text-gray-500 ml-2">
-                      ({route.steps}段階承認)
-                    </span>
-                  </div>
-                </label>
-              ))}
-            </div>
+
+            {isLoadingRoutes ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader className="w-6 h-6 animate-spin text-primary-600" />
+              </div>
+            ) : routesError ? (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-800">{routesError}</p>
+              </div>
+            ) : routes.length === 0 ? (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">承認ルートが登録されていません</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {routes.map((route) => (
+                  <label
+                    key={route.id}
+                    className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-colors ${
+                      selectedRouteId === route.id
+                        ? 'border-primary-500 bg-primary-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="route"
+                      value={route.id}
+                      checked={selectedRouteId === route.id}
+                      onChange={() => setSelectedRouteId(route.id)}
+                      className="w-4 h-4 text-primary-600"
+                    />
+                    <div className="flex-1">
+                      <span className="font-medium text-gray-900">{route.name}</span>
+                      <span className="text-xs text-gray-500 ml-2">
+                        ({route.steps?.length || 0}段階承認)
+                      </span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Dynamic Form */}

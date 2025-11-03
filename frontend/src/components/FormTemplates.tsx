@@ -1,13 +1,35 @@
-import { useState } from 'react'
-import { Plus, Edit2, Eye } from 'lucide-react'
-import { mockFormTemplates } from '../data/formTemplates'
+import { useState, useEffect } from 'react'
+import { Plus, Edit2, Eye, Loader } from 'lucide-react'
 import { FormTemplate } from '../types/form'
+import { formTemplateApi } from '../lib/api'
 import FormBuilder from './FormBuilder'
 
 export default function FormTemplates() {
-  const [templates, setTemplates] = useState<FormTemplate[]>(mockFormTemplates)
+  const [templates, setTemplates] = useState<FormTemplate[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<FormTemplate | null>(null)
   const [isBuilderOpen, setIsBuilderOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // データ取得
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        const response = await formTemplateApi.getTemplates()
+        setTemplates(response || [])
+      } catch (err) {
+        console.error('Failed to fetch form templates:', err)
+        setError('フォームテンプレートの取得に失敗しました')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchTemplates()
+  }, [])
 
   const handleCreateNew = () => {
     setSelectedTemplate(null)
@@ -19,16 +41,62 @@ export default function FormTemplates() {
     setIsBuilderOpen(true)
   }
 
-  const handleSave = (template: FormTemplate) => {
-    if (selectedTemplate) {
-      // 更新
-      setTemplates(templates.map((t) => (t.id === template.id ? template : t)))
-    } else {
-      // 新規作成
-      setTemplates([...templates, { ...template, id: Date.now() }])
+  const handleSave = async (template: FormTemplate) => {
+    try {
+      if (selectedTemplate) {
+        // 更新
+        const updated = await formTemplateApi.updateTemplate(template.id, {
+          name: template.name,
+          description: template.description,
+          icon: template.icon,
+          is_active: template.isActive,
+          fields: template.fields,
+        })
+        setTemplates(templates.map((t) => (t.id === template.id ? updated : t)))
+      } else {
+        // 新規作成
+        const created = await formTemplateApi.createTemplate({
+          name: template.name,
+          description: template.description,
+          icon: template.icon,
+          is_active: template.isActive,
+          fields: template.fields,
+        })
+        setTemplates([...templates, created])
+      }
+      setIsBuilderOpen(false)
+      setSelectedTemplate(null)
+    } catch (err) {
+      console.error('Failed to save template:', err)
+      alert('テンプレートの保存に失敗しました')
     }
-    setIsBuilderOpen(false)
-    setSelectedTemplate(null)
+  }
+
+  // ローディング中
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader className="w-8 h-8 animate-spin text-primary-600 mx-auto mb-4" />
+          <p className="text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // エラー表示
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <p className="text-red-800">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+        >
+          再読み込み
+        </button>
+      </div>
+    )
   }
 
   if (isBuilderOpen) {
